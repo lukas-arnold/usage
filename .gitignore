@@ -1,0 +1,5 @@
+.venv
+electricity.db
+oil.db
+water.db
+__pycache__
