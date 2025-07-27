@@ -1,35 +1,22 @@
-# your_project/crud.py
 from sqlalchemy.orm import Session
-from typing import Type, Union, Dict, Any, List
-from sqlalchemy import func, extract, and_
-from datetime import datetime, date, timedelta
+from sqlalchemy import func, literal, and_
+from datetime import date
+from typing import Type, TypeVar, List, Dict, Union, Optional
+import math
 
-# Import literal for potential linter appeasement in filters
-from sqlalchemy.sql import literal
+from . import models, schemas
 
-from .models import ElectricityDB, OilDB, WaterDB
-from .schemas import (
-    ElectricityCreate,
-    OilCreate,
-    WaterCreate,
-    ElectricityOverallStats,
-    ElectricityPriceTrend,
-    OilOverallStats,
-    OilPriceTrend,
-    WaterOverallStats,
-    WaterPriceTrend,
-)
-
-
-# --- Generic CRUD Operations ---
+ModelType = TypeVar("ModelType", bound=models.Base)
 
 
 def create_entry(
     db: Session,
-    model: Type[Union[ElectricityDB, OilDB, WaterDB]],
-    schema: Union[ElectricityCreate, OilCreate, WaterCreate],
-):
-    db_entry = model(**schema.model_dump())
+    model: Type[ModelType],
+    entry_schema: Union[
+        schemas.ElectricityCreate, schemas.OilCreate, schemas.WaterCreate
+    ],
+) -> ModelType:
+    db_entry = model(**entry_schema.model_dump())
     db.add(db_entry)
     db.commit()
     db.refresh(db_entry)
@@ -37,18 +24,16 @@ def create_entry(
 
 
 def get_entry(
-    db: Session, model: Type[Union[ElectricityDB, OilDB, WaterDB]], entry_id: int
-):
+    db: Session, model: Type[ModelType], entry_id: int
+) -> Optional[ModelType]:
     return db.query(model).filter(model.id == entry_id).first()
 
 
-def get_entries(db: Session, model: Type[Union[ElectricityDB, OilDB, WaterDB]]):
+def get_entries(db: Session, model: Type[ModelType]) -> List[ModelType]:
     return db.query(model).all()
 
 
-def delete_entry(
-    db: Session, model: Type[Union[ElectricityDB, OilDB, WaterDB]], entry_id: int
-):
+def delete_entry(db: Session, model: Type[ModelType], entry_id: int) -> bool:
     db_entry = db.query(model).filter(model.id == entry_id).first()
     if db_entry:
         db.delete(db_entry)
@@ -57,396 +42,382 @@ def delete_entry(
     return False
 
 
-# --- Utility Functions for Derived Fields (for *Response schemas) ---
-
-
-def calculate_electricity_derived_fields(entry: ElectricityDB) -> Dict[str, Any]:
-    # Ensure explicit float conversion for division and safe check for zero
-    price = entry.costs / float(entry.usage) if entry.usage != 0 else 0
+def calculate_electricity_derived_fields(
+    entry: models.ElectricityDB,
+) -> Dict[str, float]:
+    price_per_kwh = 0.0
+    if entry.usage != 0:
+        price_per_kwh = entry.costs / entry.usage
 
     time_from = entry.time_from
     time_to = entry.time_to
 
-    days_duration = float((time_to - time_from).days)
-    months_duration = days_duration / 30.4375 if days_duration > 0 else 0
+    duration_days = (time_to - time_from).days
+    if duration_days <= 0:
+        duration_days = 1
 
-    monthly_payment = entry.payments / months_duration if months_duration > 0 else 0
-    difference = entry.payments - entry.costs
+    monthly_payment = 0.0
+    if duration_days > 0:
+        monthly_payment = (entry.payments / duration_days) * (365.25 / 12)
+
+    difference = entry.costs - entry.payments
 
     return {
-        "price": round(float(price), 3),
-        "monthly_payment": round(float(monthly_payment), 2),
-        "difference": round(float(difference), 2),
+        "price": round(price_per_kwh, 3),
+        "monthly_payment": round(monthly_payment, 2),
+        "difference": round(difference, 2),
     }
 
 
-def calculate_oil_derived_fields(db: Session, entry: OilDB) -> Dict[str, Any]:
-    # Ensure explicit float conversion for division and safe check for zero
-    price = entry.costs / float(entry.volume) if entry.volume != 0 else 0
+def get_electricity_overall_stats(db: Session) -> schemas.ElectricityOverallStats:
+    results = db.query(
+        func.sum(models.ElectricityDB.usage).label("total_usage"),
+        func.sum(models.ElectricityDB.costs).label("total_costs"),
+        func.count(
+            func.distinct(func.strftime("%Y", models.ElectricityDB.time_from))
+        ).label("number_of_years"),
+    ).first()
 
-    year_stats = (
+    total_usage = results.total_usage if results.total_usage is not None else 0
+    total_costs = results.total_costs if results.total_costs is not None else 0
+    number_of_years = (
+        results.number_of_years if results.number_of_years is not None else 0
+    )
+
+    average_yearly_usage = 0
+    if number_of_years > 0:
+        average_yearly_usage = total_usage / number_of_years
+
+    return schemas.ElectricityOverallStats(
+        total_usage=round(total_usage, 2),
+        total_costs=round(total_costs, 2),
+        number_of_years=number_of_years,
+        average_yearly_usage=round(average_yearly_usage, 2),
+    )
+
+
+def get_electricity_price_trend(db: Session) -> List[schemas.ElectricityPriceTrend]:
+    subquery = (
         db.query(
-            func.sum(OilDB.volume).label("yearly_volume"),
-            func.sum(OilDB.costs).label("yearly_costs"),
+            func.strftime("%Y", models.ElectricityDB.time_from).label("year"),
+            (models.ElectricityDB.costs / models.ElectricityDB.usage).label(
+                "price_per_kwh"
+            ),
         )
-        .filter(extract("year", OilDB.date) == entry.date.year)
+        .filter(models.ElectricityDB.usage != literal(0))
+        .subquery()
+    )
+
+    results = (
+        db.query(
+            subquery.c.year,
+            func.avg(subquery.c.price_per_kwh).label("average_price"),
+            func.min(subquery.c.price_per_kwh).label("min_price"),
+            func.max(subquery.c.price_per_kwh).label("max_price"),
+        )
+        .group_by(subquery.c.year)
+        .order_by(subquery.c.year)
+        .all()
+    )
+
+    trends = []
+    for r in results:
+        trends.append(
+            schemas.ElectricityPriceTrend(
+                year=int(r.year),
+                average_price=round(r.average_price, 3),
+                min_price=round(r.min_price, 3),
+                max_price=round(r.max_price, 3),
+            )
+        )
+    return trends
+
+
+def calculate_oil_derived_fields(db: Session, entry: models.OilDB) -> Dict[str, float]:
+    price_per_liter = 0.0
+    if entry.volume != 0:
+        price_per_liter = entry.costs / entry.volume
+
+    year = entry.date.year
+    yearly_data = (
+        db.query(
+            func.sum(models.OilDB.volume).label("year_usage"),
+            func.sum(models.OilDB.costs).label("year_costs"),
+        )
+        .filter(func.strftime("%Y", models.OilDB.date) == str(year))
         .first()
     )
 
-    year_usage = (
-        year_stats.yearly_volume
-        if year_stats and year_stats.yearly_volume is not None
-        else 0
-    )
-    year_costs = (
-        year_stats.yearly_costs
-        if year_stats and year_stats.yearly_costs is not None
-        else 0
-    )
+    year_usage = yearly_data.year_usage if yearly_data.year_usage is not None else 0
+    year_costs = yearly_data.year_costs if yearly_data.year_costs is not None else 0
 
     return {
-        "price": round(float(price), 3),
-        "year_usage": round(float(year_usage), 2),
-        "year_costs": round(float(year_costs), 2),
-        "year": entry.date.year,
+        "price": round(price_per_liter, 3),
+        "year_usage": round(year_usage, 2),
+        "year_costs": round(year_costs, 2),
+        "year": year,
     }
 
 
-def calculate_water_derived_fields(entry: WaterDB) -> Dict[str, Any]:
-    # Ensure explicit float conversion for division and safe check for zero
-    price_water = (
-        entry.costs_water / float(entry.volume_consumed_water)
-        if entry.volume_consumed_water != 0
-        else 0
-    )
-    price_wastewater = (
-        entry.costs_wastewater / float(entry.volume_consumed_water)
-        if entry.volume_consumed_water != 0
-        else 0
-    )
-    price_rainwater = (
-        entry.costs_rainwater / float(entry.volume_rainwater)
-        if entry.volume_rainwater != 0
-        else 0
-    )
-
-    total_costs = entry.costs_water + entry.costs_wastewater + entry.costs_rainwater
-
-    return {
-        "price_water": round(float(price_water), 3),
-        "price_wastewater": round(float(price_wastewater), 3),
-        "price_rainwater": round(float(price_rainwater), 3),
-        "total_costs": round(float(total_costs), 2),
-    }
-
-
-# --- Statistics Functions ---
-
-
-# Electricity Statistics
-def get_electricity_overall_stats(db: Session) -> ElectricityOverallStats:
-    total_stats = db.query(
-        func.sum(ElectricityDB.usage).label("total_usage"),
-        func.sum(ElectricityDB.costs).label("total_costs"),
-        func.count(func.distinct(extract("year", ElectricityDB.time_from))).label(
+def get_oil_overall_stats(db: Session) -> schemas.OilOverallStats:
+    results = db.query(
+        func.sum(models.OilDB.volume).label("total_volume"),
+        func.sum(models.OilDB.costs).label("total_costs"),
+        func.count(func.distinct(func.strftime("%Y", models.OilDB.date))).label(
             "number_of_years"
         ),
     ).first()
 
-    if total_stats and total_stats.total_usage is not None:
-        average_yearly_usage = (
-            float(total_stats.total_usage) / total_stats.number_of_years
-            if total_stats.number_of_years > 0
-            else 0
-        )
-        return ElectricityOverallStats(
-            total_usage=round(float(total_stats.total_usage), 2),
-            total_costs=round(float(total_stats.total_costs), 2),
-            number_of_years=total_stats.number_of_years,
-            average_yearly_usage=round(float(average_yearly_usage), 2),
-        )
-    return ElectricityOverallStats(
-        total_usage=0.0, total_costs=0.0, number_of_years=0, average_yearly_usage=0.0
+    total_volume = results.total_volume if results.total_volume is not None else 0
+    total_costs = results.total_costs if results.total_costs is not None else 0
+    number_of_years = (
+        results.number_of_years if results.number_of_years is not None else 0
+    )
+
+    average_yearly_volume = 0
+    if number_of_years > 0:
+        average_yearly_volume = total_volume / number_of_years
+
+    return schemas.OilOverallStats(
+        total_volume=round(total_volume, 2),
+        total_costs=round(total_costs, 2),
+        number_of_years=number_of_years,
+        average_yearly_volume=round(average_yearly_volume, 2),
     )
 
 
-def get_electricity_price_trend(db: Session) -> List[ElectricityPriceTrend]:
-    yearly_data = (
+def get_oil_price_trend(db: Session) -> List[schemas.OilPriceTrend]:
+    subquery = (
         db.query(
-            extract("year", ElectricityDB.time_from).label("year"),
-            func.avg(ElectricityDB.costs / ElectricityDB.usage).label("average_price"),
-            func.min(ElectricityDB.costs / ElectricityDB.usage).label("min_price"),
-            func.max(ElectricityDB.costs / ElectricityDB.usage).label("max_price"),
+            func.strftime("%Y", models.OilDB.date).label("year"),
+            (models.OilDB.costs / models.OilDB.volume).label("price_per_liter"),
         )
-        .filter(
-            ElectricityDB.usage != literal(0),  # Use literal to appease some linters
+        .filter(models.OilDB.volume != literal(0))
+        .subquery()
+    )
+
+    results = (
+        db.query(
+            subquery.c.year,
+            func.avg(subquery.c.price_per_liter).label("average_price"),
+            func.min(subquery.c.price_per_liter).label("min_price"),
+            func.max(subquery.c.price_per_liter).label("max_price"),
         )
-        .group_by("year")
-        .order_by("year")
+        .group_by(subquery.c.year)
+        .order_by(subquery.c.year)
         .all()
     )
 
-    trend = []
-    for data in yearly_data:
-        trend.append(
-            ElectricityPriceTrend(
-                year=int(data.year),
-                average_price=(
-                    round(float(data.average_price), 3)
-                    if data.average_price is not None
-                    else 0
-                ),
-                min_price=(
-                    round(float(data.min_price), 3) if data.min_price is not None else 0
-                ),
-                max_price=(
-                    round(float(data.max_price), 3) if data.max_price is not None else 0
-                ),
+    trends = []
+    for r in results:
+        trends.append(
+            schemas.OilPriceTrend(
+                year=int(r.year),
+                average_price=round(r.average_price, 3),
+                min_price=round(r.min_price, 3),
+                max_price=round(r.max_price, 3),
             )
         )
-    return trend
+    return trends
 
 
-# Oil Statistics
-def calculate_yearly_stats_oil(db: Session, year: int) -> Dict[str, Any]:
-    stats = (
-        db.query(
-            func.sum(OilDB.volume).label("yearly_volume"),
-            func.sum(OilDB.costs).label("yearly_costs"),
-            func.count(OilDB.id).label("number_of_entries"),
-        )
-        .filter(extract("year", OilDB.date) == year)
-        .first()
-    )
+def calculate_water_derived_fields(entry: models.WaterDB) -> Dict[str, float]:
+    price_per_m3_water = 0.0
+    if entry.volume_consumed_water != 0:
+        price_per_m3_water = entry.costs_water / entry.volume_consumed_water
 
-    if stats and stats.yearly_volume is not None:
-        average_price = (
-            stats.yearly_costs / float(stats.yearly_volume)
-            if stats.yearly_volume != 0
-            else 0
-        )
-        return {
-            "yearly_volume": round(float(stats.yearly_volume), 2),
-            "yearly_costs": round(float(stats.yearly_costs), 2),
-            "number_of_entries": stats.number_of_entries,
-            "average_price": round(float(average_price), 3),
-        }
+    price_per_m3_wastewater = 0.0
+    if entry.volume_consumed_water != 0:
+        price_per_m3_wastewater = entry.costs_wastewater / entry.volume_consumed_water
+
+    monthly_payment_water = entry.payments_water / 12
+    monthly_payment_wastewater = entry.payments_wastewater / 12
+
+    difference_water = entry.costs_water - entry.payments_water
+    difference_wastewater = entry.costs_wastewater - entry.payments_wastewater
+
     return {
-        "yearly_volume": 0.0,
-        "yearly_costs": 0.0,
-        "number_of_entries": 0,
-        "average_price": 0.0,
+        "price_per_m3_water": round(price_per_m3_water, 3),
+        "price_per_m3_wastewater": round(price_per_m3_wastewater, 3),
+        "monthly_payment_water": round(monthly_payment_water, 2),
+        "monthly_payment_wastewater": round(monthly_payment_wastewater, 2),
+        "difference_water": round(difference_water, 2),
+        "difference_wastewater": round(difference_wastewater, 2),
     }
 
 
-def get_oil_overall_stats(db: Session) -> OilOverallStats:
-    total_stats = db.query(
-        func.sum(OilDB.volume).label("total_volume"),
-        func.sum(OilDB.costs).label("total_costs"),
-        func.count(func.distinct(extract("year", OilDB.date))).label("number_of_years"),
+def get_water_overall_stats(db: Session) -> schemas.WaterOverallStats:
+    results = db.query(
+        func.sum(models.WaterDB.volume_consumed_water).label(
+            "total_volume_consumed_water"
+        ),
+        func.sum(models.WaterDB.costs_water).label("total_costs_water"),
+        func.sum(models.WaterDB.costs_wastewater).label("total_costs_wastewater"),
+        func.sum(models.WaterDB.volume_rainwater).label("total_volume_rainwater"),
+        func.sum(models.WaterDB.costs_rainwater).label("total_costs_rainwater"),
+        func.sum(models.WaterDB.payments_water).label("total_payments_water"),
+        func.sum(models.WaterDB.payments_wastewater).label("total_payments_wastewater"),
+        func.count(func.distinct(models.WaterDB.year)).label("number_of_years"),
     ).first()
 
-    if total_stats and total_stats.total_volume is not None:
-        average_yearly_volume = (
-            float(total_stats.total_volume) / total_stats.number_of_years
-            if total_stats.number_of_years > 0
-            else 0
+    total_volume_consumed_water = (
+        results.total_volume_consumed_water
+        if results.total_volume_consumed_water is not None
+        else 0
+    )
+    total_costs_water = (
+        results.total_costs_water if results.total_costs_water is not None else 0
+    )
+    total_costs_wastewater = (
+        results.total_costs_wastewater
+        if results.total_costs_wastewater is not None
+        else 0
+    )
+    total_volume_rainwater = (
+        results.total_volume_rainwater
+        if results.total_volume_rainwater is not None
+        else 0
+    )
+    total_costs_rainwater = (
+        results.total_costs_rainwater
+        if results.total_costs_rainwater is not None
+        else 0
+    )
+    total_payments_water = (
+        results.total_payments_water if results.total_payments_water is not None else 0
+    )
+    total_payments_wastewater = (
+        results.total_payments_wastewater
+        if results.total_payments_wastewater is not None
+        else 0
+    )
+    number_of_years = (
+        results.number_of_years if results.number_of_years is not None else 0
+    )
+
+    average_yearly_volume_consumed_water = 0
+    if number_of_years > 0:
+        average_yearly_volume_consumed_water = (
+            total_volume_consumed_water / number_of_years
         )
-        return OilOverallStats(
-            total_volume=round(float(total_stats.total_volume), 2),
-            total_costs=round(float(total_stats.total_costs), 2),
-            number_of_years=total_stats.number_of_years,
-            average_yearly_volume=round(float(average_yearly_volume), 2),
-        )
-    return OilOverallStats(
-        total_volume=0.0, total_costs=0.0, number_of_years=0, average_yearly_volume=0.0
+
+    average_yearly_volume_rainwater = 0  # Calculation for new field
+    if number_of_years > 0:
+        average_yearly_volume_rainwater = total_volume_rainwater / number_of_years
+
+    total_difference_water = total_costs_water - total_payments_water
+    total_difference_wastewater = total_costs_wastewater - total_payments_wastewater
+
+    return schemas.WaterOverallStats(
+        total_volume_consumed_water=round(total_volume_consumed_water, 2),
+        total_costs_water=round(total_costs_water, 2),
+        total_costs_wastewater=round(total_costs_wastewater, 2),
+        total_volume_rainwater=round(total_volume_rainwater, 2),
+        total_costs_rainwater=round(total_costs_rainwater, 2),
+        total_payments_water=round(total_payments_water, 2),
+        total_payments_wastewater=round(total_payments_wastewater, 2),
+        total_difference_water=round(total_difference_water, 2),
+        total_difference_wastewater=round(total_difference_wastewater, 2),
+        number_of_years=number_of_years,
+        average_yearly_volume_consumed_water=round(
+            average_yearly_volume_consumed_water, 2
+        ),
+        average_yearly_volume_rainwater=round(
+            average_yearly_volume_rainwater, 2
+        ),  # Include new field
     )
 
 
-def get_oil_price_trend(db: Session) -> List[OilPriceTrend]:
-    yearly_data = (
+def get_water_price_trend(db: Session) -> List[schemas.WaterPriceTrend]:
+    subquery_water = (
         db.query(
-            extract("year", OilDB.date).label("year"),
-            func.avg(OilDB.costs / OilDB.volume).label("average_price"),
-            func.min(OilDB.costs / OilDB.volume).label("min_price"),
-            func.max(OilDB.costs / OilDB.volume).label("max_price"),
+            models.WaterDB.year,
+            (models.WaterDB.costs_water / models.WaterDB.volume_consumed_water).label(
+                "price_per_m3_water"
+            ),
         )
-        .filter(
-            OilDB.volume != literal(0),  # Use literal to appease some linters
+        .filter(models.WaterDB.volume_consumed_water != literal(0))
+        .subquery()
+    )
+
+    subquery_wastewater = (
+        db.query(
+            models.WaterDB.year,
+            (
+                models.WaterDB.costs_wastewater / models.WaterDB.volume_consumed_water
+            ).label("price_per_m3_wastewater"),
+        )
+        .filter(models.WaterDB.volume_consumed_water != literal(0))
+        .subquery()
+    )
+
+    results = (
+        db.query(
+            func.coalesce(subquery_water.c.year, subquery_wastewater.c.year).label(
+                "year"
+            ),
+            func.avg(subquery_water.c.price_per_m3_water).label(
+                "average_price_per_m3_water"
+            ),
+            func.min(subquery_water.c.price_per_m3_water).label(
+                "min_price_per_m3_water"
+            ),
+            func.max(subquery_water.c.price_per_m3_water).label(
+                "max_price_per_m3_water"
+            ),
+            func.avg(subquery_wastewater.c.price_per_m3_wastewater).label(
+                "average_price_per_m3_wastewater"
+            ),
+            func.min(subquery_wastewater.c.price_per_m3_wastewater).label(
+                "min_price_per_m3_wastewater"
+            ),
+            func.max(subquery_wastewater.c.price_per_m3_wastewater).label(
+                "max_price_per_m3_wastewater"
+            ),
+        )
+        .outerjoin(
+            subquery_wastewater, subquery_water.c.year == subquery_wastewater.c.year
         )
         .group_by("year")
         .order_by("year")
         .all()
     )
 
-    trend = []
-    for data in yearly_data:
-        trend.append(
-            OilPriceTrend(
-                year=int(data.year),
-                average_price=(
-                    round(float(data.average_price), 3)
-                    if data.average_price is not None
-                    else 0
+    trends = []
+    for r in results:
+        trends.append(
+            schemas.WaterPriceTrend(
+                year=int(r.year),
+                average_price_per_m3_water=(
+                    round(r.average_price_per_m3_water, 3)
+                    if r.average_price_per_m3_water is not None
+                    else 0.0
                 ),
-                min_price=(
-                    round(float(data.min_price), 3) if data.min_price is not None else 0
+                min_price_per_m3_water=(
+                    round(r.min_price_per_m3_water, 3)
+                    if r.min_price_per_m3_water is not None
+                    else 0.0
                 ),
-                max_price=(
-                    round(float(data.max_price), 3) if data.max_price is not None else 0
+                max_price_per_m3_water=(
+                    round(r.max_price_per_m3_water, 3)
+                    if r.max_price_per_m3_water is not None
+                    else 0.0
                 ),
-            )
-        )
-    return trend
-
-
-# Water Statistics
-def get_water_overall_stats(db: Session) -> WaterOverallStats:
-    total_stats = db.query(
-        func.sum(WaterDB.volume_consumed_water).label("total_volume_consumed_water"),
-        func.sum(WaterDB.volume_rainwater).label("total_volume_rainwater"),
-        func.sum(WaterDB.costs_water).label("total_costs_water"),
-        func.sum(WaterDB.costs_wastewater).label("total_costs_wastewater"),
-        func.sum(WaterDB.costs_rainwater).label("total_costs_rainwater"),
-        func.count(func.distinct(WaterDB.year)).label("number_of_years"),
-    ).first()
-
-    if total_stats and total_stats.total_volume_consumed_water is not None:
-        num_years = (
-            total_stats.number_of_years if total_stats.number_of_years > 0 else 1
-        )
-
-        avg_vol_consumed = float(total_stats.total_volume_consumed_water) / num_years
-        avg_vol_rainwater = float(total_stats.total_volume_rainwater) / num_years
-        avg_costs_water = total_stats.total_costs_water / num_years
-        avg_costs_wastewater = total_stats.total_costs_wastewater / num_years
-        avg_costs_rainwater = total_stats.total_costs_rainwater / num_years
-
-        return WaterOverallStats(
-            total_volume_consumed_water=round(
-                float(total_stats.total_volume_consumed_water), 2
-            ),
-            total_volume_rainwater=round(float(total_stats.total_volume_rainwater), 2),
-            total_costs_water=round(float(total_stats.total_costs_water), 2),
-            total_costs_wastewater=round(float(total_stats.total_costs_wastewater), 2),
-            total_costs_rainwater=round(float(total_stats.total_costs_rainwater), 2),
-            number_of_years=total_stats.number_of_years,
-            average_yearly_volume_consumed_water=round(float(avg_vol_consumed), 2),
-            average_yearly_volume_rainwater=round(float(avg_vol_rainwater), 2),
-            average_yearly_costs_water=round(float(avg_costs_water), 2),
-            average_yearly_costs_wastewater=round(float(avg_costs_wastewater), 2),
-            average_yearly_costs_rainwater=round(float(avg_costs_rainwater), 2),
-        )
-    return WaterOverallStats(
-        total_volume_consumed_water=0.0,
-        total_volume_rainwater=0.0,
-        total_costs_water=0.0,
-        total_costs_wastewater=0.0,
-        total_costs_rainwater=0.0,
-        number_of_years=0,
-        average_yearly_volume_consumed_water=0.0,
-        average_yearly_volume_rainwater=0.0,
-        average_yearly_costs_water=0.0,
-        average_yearly_costs_wastewater=0.0,
-        average_yearly_costs_rainwater=0.0,
-    )
-
-
-def get_water_price_trend(db: Session) -> List[WaterPriceTrend]:
-    trend_data = (
-        db.query(
-            WaterDB.year,
-            func.avg(WaterDB.costs_water / WaterDB.volume_consumed_water).label(
-                "average_price_water"
-            ),
-            func.avg(WaterDB.costs_wastewater / WaterDB.volume_consumed_water).label(
-                "average_price_wastewater"
-            ),
-            func.avg(WaterDB.costs_rainwater / WaterDB.volume_rainwater).label(
-                "average_price_rainwater"
-            ),
-            func.min(WaterDB.costs_water / WaterDB.volume_consumed_water).label(
-                "min_price_water"
-            ),
-            func.max(WaterDB.costs_water / WaterDB.volume_consumed_water).label(
-                "max_price_water"
-            ),
-            func.min(WaterDB.costs_wastewater / WaterDB.volume_consumed_water).label(
-                "min_price_wastewater"
-            ),
-            func.max(WaterDB.costs_wastewater / WaterDB.volume_consumed_water).label(
-                "max_price_wastewater"
-            ),
-            func.min(WaterDB.costs_rainwater / WaterDB.volume_rainwater).label(
-                "min_price_rainwater"
-            ),
-            func.max(WaterDB.costs_rainwater / WaterDB.volume_rainwater).label(
-                "max_price_rainwater"
-            ),
-        )
-        .filter(
-            and_(
-                WaterDB.volume_consumed_water
-                != literal(0),  # Use literal to appease some linters
-                WaterDB.volume_rainwater
-                != literal(0),  # Use literal to appease some linters
-            )
-        )
-        .group_by(WaterDB.year)
-        .order_by(WaterDB.year)
-        .all()
-    )
-
-    trend = []
-    for data in trend_data:
-        trend.append(
-            WaterPriceTrend(
-                year=int(data.year),
-                average_price_water=(
-                    round(float(data.average_price_water), 3)
-                    if data.average_price_water is not None
-                    else 0
+                average_price_per_m3_wastewater=(
+                    round(r.average_price_per_m3_wastewater, 3)
+                    if r.average_price_per_m3_wastewater is not None
+                    else 0.0
                 ),
-                average_price_wastewater=(
-                    round(float(data.average_price_wastewater), 3)
-                    if data.average_price_wastewater is not None
-                    else 0
+                min_price_per_m3_wastewater=(
+                    round(r.min_price_per_m3_wastewater, 3)
+                    if r.min_price_per_m3_wastewater is not None
+                    else 0.0
                 ),
-                average_price_rainwater=(
-                    round(float(data.average_price_rainwater), 3)
-                    if data.average_price_rainwater is not None
-                    else 0
-                ),
-                min_price_water=(
-                    round(float(data.min_price_water), 3)
-                    if data.min_price_water is not None
-                    else 0
-                ),
-                max_price_water=(
-                    round(float(data.max_price_water), 3)
-                    if data.max_price_water is not None
-                    else 0
-                ),
-                min_price_wastewater=(
-                    round(float(data.min_price_wastewater), 3)
-                    if data.min_price_wastewater is not None
-                    else 0
-                ),
-                max_price_wastewater=(
-                    round(float(data.max_price_wastewater), 3)
-                    if data.max_price_wastewater is not None
-                    else 0
-                ),
-                min_price_rainwater=(
-                    round(float(data.min_price_rainwater), 3)
-                    if data.min_price_rainwater is not None
-                    else 0
-                ),
-                max_price_rainwater=(
-                    round(float(data.max_price_rainwater), 3)
-                    if data.max_price_rainwater is not None
-                    else 0
+                max_price_per_m3_wastewater=(
+                    round(r.max_price_per_m3_wastewater, 3)
+                    if r.max_price_per_m3_wastewater is not None
+                    else 0.0
                 ),
             )
         )
-    return trend
+    return trends

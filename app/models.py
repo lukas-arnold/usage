@@ -6,8 +6,8 @@ class ElectricityDB(Base):
     __tablename__ = "electricity"
 
     id = Column(Integer, primary_key=True, index=True)
-    time_from = Column(String, nullable=False)
-    time_to = Column(String, nullable=False)
+    time_from = Column(Date, nullable=False)
+    time_to = Column(Date, nullable=False)
     usage = Column(Integer, nullable=False)
     costs = Column(Float, nullable=False)
     retailer = Column(String, nullable=False)
@@ -35,5 +35,7 @@ class WaterDB(Base):
     costs_water = Column(Float, nullable=False)
     costs_wastewater = Column(Float, nullable=False)
     volume_rainwater = Column(Integer, nullable=False)
-    costs_rainwater = Column(Float, nullable=True)
+    costs_rainwater = Column(Float, nullable=False)
+    payments_water = Column(Float, nullable=False)
+    payments_wastewater = Column(Float, nullable=False)
     note = Column(String, nullable=True)
