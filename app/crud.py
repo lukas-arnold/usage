@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, literal, and_
+from sqlalchemy import func, literal, and_, case, Float
 from datetime import date
 from typing import Type, TypeVar, List, Dict, Union, Optional
 import math
@@ -329,33 +329,41 @@ def get_water_overall_stats(db: Session) -> schemas.WaterOverallStats:
 
 
 def get_water_price_trend(db: Session) -> List[schemas.WaterPriceTrend]:
+    # Using a CASE statement for robust division by zero handling
+    # Explicitly casting to Float to ensure floating-point division results
     subquery_water = (
         db.query(
-            models.WaterDB.year,
-            (models.WaterDB.costs_water / models.WaterDB.volume_consumed_water).label(
-                "price_per_m3_water"
-            ),
-        )
-        .filter(models.WaterDB.volume_consumed_water != literal(0))
-        .subquery()
-    )
-
-    subquery_wastewater = (
-        db.query(
-            models.WaterDB.year,
+            models.WaterDB.year.label("year"),
             (
-                models.WaterDB.costs_wastewater / models.WaterDB.volume_consumed_water
+                case(
+                    (
+                        models.WaterDB.volume_consumed_water != 0,
+                        models.WaterDB.costs_water.cast(Float)
+                        / models.WaterDB.volume_consumed_water.cast(Float),
+                    ),
+                    else_=None,  # Return None (SQL NULL) if volume is 0
+                )
+            ).label("price_per_m3_water"),
+            (
+                case(
+                    (
+                        models.WaterDB.volume_consumed_water != 0,
+                        models.WaterDB.costs_wastewater.cast(Float)
+                        / models.WaterDB.volume_consumed_water.cast(Float),
+                    ),
+                    else_=None,  # Return None (SQL NULL) if volume is 0
+                )
             ).label("price_per_m3_wastewater"),
         )
-        .filter(models.WaterDB.volume_consumed_water != literal(0))
+        # The filter is no longer strictly necessary here as the case statement handles the 0-volume explicitly.
+        # You can remove the .filter() line if you wish, or keep it as an extra safeguard; it won't cause harm.
+        # .filter(models.WaterDB.volume_consumed_water != literal(0))
         .subquery()
     )
 
     results = (
         db.query(
-            func.coalesce(subquery_water.c.year, subquery_wastewater.c.year).label(
-                "year"
-            ),
+            subquery_water.c.year,
             func.avg(subquery_water.c.price_per_m3_water).label(
                 "average_price_per_m3_water"
             ),
@@ -365,21 +373,18 @@ def get_water_price_trend(db: Session) -> List[schemas.WaterPriceTrend]:
             func.max(subquery_water.c.price_per_m3_water).label(
                 "max_price_per_m3_water"
             ),
-            func.avg(subquery_wastewater.c.price_per_m3_wastewater).label(
+            func.avg(subquery_water.c.price_per_m3_wastewater).label(
                 "average_price_per_m3_wastewater"
             ),
-            func.min(subquery_wastewater.c.price_per_m3_wastewater).label(
+            func.min(subquery_water.c.price_per_m3_wastewater).label(
                 "min_price_per_m3_wastewater"
             ),
-            func.max(subquery_wastewater.c.price_per_m3_wastewater).label(
+            func.max(subquery_water.c.price_per_m3_wastewater).label(
                 "max_price_per_m3_wastewater"
             ),
         )
-        .outerjoin(
-            subquery_wastewater, subquery_water.c.year == subquery_wastewater.c.year
-        )
-        .group_by("year")
-        .order_by("year")
+        .group_by(subquery_water.c.year)
+        .order_by(subquery_water.c.year)
         .all()
     )
 
