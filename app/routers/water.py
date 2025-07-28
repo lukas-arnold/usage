@@ -33,9 +33,7 @@ def create_water_entry(entry: WaterCreate, db: Session = Depends(get_db_water)):
         costs_water=db_entry.costs_water,
         costs_wastewater=db_entry.costs_wastewater,
         costs_rainwater=db_entry.costs_rainwater,
-        payments_water=db_entry.payments_water,
-        payments_wastewater=db_entry.payments_wastewater,
-        payments_rainwater=db_entry.payments_rainwater,
+        payments=db_entry.payments,
         fixed_price=db_entry.fixed_price,
         note=db_entry.note,
         **derived_fields
@@ -58,9 +56,7 @@ def read_water_entries(db: Session = Depends(get_db_water)):
                 costs_water=entry.costs_water,
                 costs_wastewater=entry.costs_wastewater,
                 costs_rainwater=entry.costs_rainwater,
-                payments_water=entry.payments_water,
-                payments_wastewater=entry.payments_wastewater,
-                payments_rainwater=entry.payments_rainwater,
+                payments=entry.payments,
                 fixed_price=entry.fixed_price,
                 note=entry.note,
                 **derived_fields
@@ -84,9 +80,7 @@ def read_water_entry(entry_id: int, db: Session = Depends(get_db_water)):
         costs_water=db_entry.costs_water,
         costs_wastewater=db_entry.costs_wastewater,
         costs_rainwater=db_entry.costs_rainwater,
-        payments_water=db_entry.payments_water,
-        payments_wastewater=db_entry.payments_wastewater,
-        payments_rainwater=db_entry.payments_rainwater,
+        payments=db_entry.payments,
         fixed_price=db_entry.fixed_price,
         note=db_entry.note,
         **derived_fields
