@@ -24,7 +24,7 @@ class ElectricityResponse(Electricity):
     difference: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ElectricityOverallStats(BaseModel):
@@ -39,6 +39,12 @@ class ElectricityPriceTrend(BaseModel):
     average_price: float
     min_price: float
     max_price: float
+
+
+class ElectricityYearlySummary(BaseModel):
+    year: int
+    total_usage: float
+    total_costs: float
 
 
 class Oil(BaseModel):
@@ -57,11 +63,9 @@ class OilResponse(Oil):
     id: int
     price: float
     year_usage: float
-    year_costs: float
-    year: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class OilOverallStats(BaseModel):
@@ -78,15 +82,29 @@ class OilPriceTrend(BaseModel):
     max_price: float
 
 
+class OilYearlySummary(BaseModel):
+    year: int
+    total_volume: float
+    total_costs: float
+
+
 class Water(BaseModel):
     year: int
-    volume_consumed_water: int
+
+    volume_water: int
+    volume_wastewater: int
+    volume_rainwater: int
+
     costs_water: float
     costs_wastewater: float
-    volume_rainwater: int
     costs_rainwater: float
+
     payments_water: float
     payments_wastewater: float
+    payments_rainwater: float
+
+    fixed_price: float
+
     note: Optional[str] = None
 
 
@@ -96,37 +114,91 @@ class WaterCreate(Water):
 
 class WaterResponse(Water):
     id: int
-    price_per_m3_water: float
-    price_per_m3_wastewater: float
+
+    price_water: float
+    price_wastewater: float
+    price_rainwater: float
+
     monthly_payment_water: float
     monthly_payment_wastewater: float
+    monthly_payment_rainwater: float
+
     difference_water: float
     difference_wastewater: float
+    difference_rainwater: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class WaterOverallStats(BaseModel):
-    total_volume_consumed_water: float
+    total_volume_water: float
+    total_volume_wastewater: float
+    total_volume_rainwater: float
+
     total_costs_water: float
     total_costs_wastewater: float
-    total_volume_rainwater: float
     total_costs_rainwater: float
+
     total_payments_water: float
     total_payments_wastewater: float
+    total_payments_rainwater: float
+
     total_difference_water: float
     total_difference_wastewater: float
+    total_difference_rainwater: float
+
+    total_fixed_price: float
+
     number_of_years: int
-    average_yearly_volume_consumed_water: float
+
+    average_yearly_volume_water: float
+    average_yearly_volume_wastewater: float
     average_yearly_volume_rainwater: float
+
+    average_yearly_costs_water: float
+    average_yearly_costs_wastewater: float
+    average_yearly_costs_rainwater: float
+
+    average_yearly_fixed_price: float
+
+    total_costs: float
+    average_usage: float
 
 
 class WaterPriceTrend(BaseModel):
     year: int
-    average_price_per_m3_water: float
-    min_price_per_m3_water: float
-    max_price_per_m3_water: float
-    average_price_per_m3_wastewater: float
-    min_price_per_m3_wastewater: float
-    max_price_per_m3_wastewater: float
+    average_price_water: float
+    average_price_wastewater: float
+    average_price_rainwater: float
+
+    min_price_water: float
+    min_price_wastewater: float
+    min_price_rainwater: float
+
+    max_price_water: float
+    max_price_wastewater: float
+    max_price_rainwater: float
+
+    average_fixed_price: float
+    min_fixed_price: float
+    max_fixed_price: float
+
+
+class WaterYearlySummary(BaseModel):
+    year: int
+
+    total_volume_water: float
+    total_volume_wastewater: float
+    total_volume_rainwater: float
+
+    total_costs_water: float
+    total_costs_wastewater: float
+    total_costs_rainwater: float
+
+    total_payments_water: float
+    total_payments_wastewater: float
+    total_payments_rainwater: float
+
+    volume_wastewater: int
+    costs_wastewater: float

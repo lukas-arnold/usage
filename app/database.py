@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
+from app.models import Base
 
 SQLALCHEMY_ELECTRICITY_DATABASE_URL = "sqlite:///./electricity.db"
 SQLALCHEMY_OIL_DATABASE_URL = "sqlite:///./oil.db"
@@ -20,8 +21,6 @@ SessionLocalElectricity = sessionmaker(
 )
 SessionLocalOil = sessionmaker(autocommit=False, autoflush=False, bind=engine_oil)
 SessionLocalWater = sessionmaker(autocommit=False, autoflush=False, bind=engine_water)
-
-Base = declarative_base()
 
 
 def init_db():

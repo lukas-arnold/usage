@@ -1,41 +1,50 @@
-from sqlalchemy import Column, Integer, Float, String, Date
-from .database import Base
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import Integer
+from datetime import date as date_
 
 
-class ElectricityDB(Base):
+class Base(DeclarativeBase):
+    pass
+
+
+class BaseModelMixin:
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+
+
+class ElectricityDB(Base, BaseModelMixin):
     __tablename__ = "electricity"
 
-    id = Column(Integer, primary_key=True, index=True)
-    time_from = Column(Date, nullable=False)
-    time_to = Column(Date, nullable=False)
-    usage = Column(Integer, nullable=False)
-    costs = Column(Float, nullable=False)
-    retailer = Column(String, nullable=False)
-    payments = Column(Float, nullable=False)
-    note = Column(String, nullable=True)
+    time_from: Mapped[date_] = mapped_column(nullable=False)
+    time_to: Mapped[date_] = mapped_column(nullable=False)
+    usage: Mapped[int] = mapped_column(nullable=False)
+    costs: Mapped[float] = mapped_column(nullable=False)
+    retailer: Mapped[str] = mapped_column(nullable=False)
+    payments: Mapped[float] = mapped_column(nullable=False)
+    note: Mapped[str | None] = mapped_column(nullable=True)
 
 
-class OilDB(Base):
+class OilDB(Base, BaseModelMixin):
     __tablename__ = "oil"
 
-    id = Column(Integer, primary_key=True, index=True)
-    date = Column(Date, nullable=False)
-    volume = Column(Integer, nullable=False)
-    costs = Column(Float, nullable=False)
-    retailer = Column(String, nullable=False)
-    note = Column(String, nullable=True)
+    date: Mapped[date_] = mapped_column(nullable=False)
+    volume: Mapped[int] = mapped_column(nullable=False)
+    costs: Mapped[float] = mapped_column(nullable=False)
+    retailer: Mapped[str] = mapped_column(nullable=False)
+    note: Mapped[str | None] = mapped_column(nullable=True)
 
 
-class WaterDB(Base):
+class WaterDB(Base, BaseModelMixin):
     __tablename__ = "water"
 
-    id = Column(Integer, primary_key=True, index=True)
-    year = Column(Integer, nullable=False)
-    volume_consumed_water = Column(Integer, nullable=False)
-    costs_water = Column(Float, nullable=False)
-    costs_wastewater = Column(Float, nullable=False)
-    volume_rainwater = Column(Integer, nullable=False)
-    costs_rainwater = Column(Float, nullable=False)
-    payments_water = Column(Float, nullable=False)
-    payments_wastewater = Column(Float, nullable=False)
-    note = Column(String, nullable=True)
+    year: Mapped[int] = mapped_column(nullable=False)
+    volume_water: Mapped[int] = mapped_column(nullable=False)
+    volume_wastewater: Mapped[int] = mapped_column(nullable=False)
+    volume_rainwater: Mapped[int] = mapped_column(nullable=False)
+    costs_water: Mapped[float] = mapped_column(nullable=False)
+    costs_wastewater: Mapped[float] = mapped_column(nullable=False)
+    costs_rainwater: Mapped[float] = mapped_column(nullable=False)
+    payments_water: Mapped[float] = mapped_column(nullable=False)
+    payments_wastewater: Mapped[float] = mapped_column(nullable=False)
+    payments_rainwater: Mapped[float] = mapped_column(nullable=False)
+    fixed_price: Mapped[float] = mapped_column(nullable=False)
+    note: Mapped[str | None] = mapped_column(nullable=True)
