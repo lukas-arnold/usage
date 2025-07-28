@@ -98,7 +98,7 @@ def get_electricity_overall_stats(db: Session) -> ElectricityOverallStats:
             total_usage=0.0,
             total_costs=0.0,
             number_of_years=0.0,
-            average_yearly_usage=0.0,
+            average_usage=0.0,
         )
 
     # Calculate total duration of covered data in days
@@ -108,15 +108,13 @@ def get_electricity_overall_stats(db: Session) -> ElectricityOverallStats:
     number_of_years = total_span_days / 365.25 if total_span_days > 0 else 0.0
 
     # Calculate yearly average
-    average_yearly_usage = (
-        (total_usage / number_of_years) if number_of_years > 0 else 0.0
-    )
+    average_usage = (total_usage / number_of_years) if number_of_years > 0 else 0.0
 
     return ElectricityOverallStats(
         total_usage=round(total_usage, 2),
         total_costs=round(total_costs, 2),
         number_of_years=round(number_of_years, 2),
-        average_yearly_usage=round(average_yearly_usage, 2),
+        average_usage=round(average_usage, 2),
     )
 
 

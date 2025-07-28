@@ -47,12 +47,12 @@ def get_oil_overall_stats(db: Session) -> OilOverallStats:
         db.query(func.count(func.distinct(func.strftime("%Y", OilDB.date)))).scalar()
         or 1
     )
-    average_yearly_volume = total_volume / number_of_years
+    average_volume = total_volume / number_of_years
     return OilOverallStats(
         total_volume=round(total_volume, 2),
         total_costs=round(total_costs, 2),
         number_of_years=number_of_years,
-        average_yearly_volume=round(average_yearly_volume, 2),
+        average_volume=round(average_volume, 2),
     )
 
 

@@ -31,7 +31,7 @@ class ElectricityOverallStats(BaseModel):
     total_usage: float
     total_costs: float
     number_of_years: float
-    average_yearly_usage: float
+    average_usage: float
 
 
 class ElectricityPriceTrend(BaseModel):
@@ -70,7 +70,7 @@ class OilOverallStats(BaseModel):
     total_volume: float
     total_costs: float
     number_of_years: int
-    average_yearly_volume: float
+    average_volume: float
 
 
 class OilPriceTrend(BaseModel):
