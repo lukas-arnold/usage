@@ -30,7 +30,7 @@ class ElectricityResponse(Electricity):
 class ElectricityOverallStats(BaseModel):
     total_usage: float
     total_costs: float
-    number_of_years: int
+    number_of_years: float
     average_yearly_usage: float
 
 
