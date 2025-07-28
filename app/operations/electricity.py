@@ -97,8 +97,6 @@ def get_electricity_price_trend(db: Session) -> List[ElectricityPriceTrend]:
         db.query(
             func.strftime("%Y", ElectricityDB.time_from).label("year"),
             func.avg(ElectricityDB.costs / ElectricityDB.usage).label("average_price"),
-            func.min(ElectricityDB.costs / ElectricityDB.usage).label("min_price"),
-            func.max(ElectricityDB.costs / ElectricityDB.usage).label("max_price"),
         )
         .filter(ElectricityDB.usage > 0)
         .group_by("year")
@@ -109,10 +107,7 @@ def get_electricity_price_trend(db: Session) -> List[ElectricityPriceTrend]:
     for r in results:
         trends.append(
             ElectricityPriceTrend(
-                year=int(r.year),
-                average_price=round(r.average_price, 3),
-                min_price=round(r.min_price, 3),
-                max_price=round(r.max_price, 3),
+                year=int(r.year), average_price=round(r.average_price, 3)
             )
         )
     return trends

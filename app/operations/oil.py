@@ -84,8 +84,6 @@ def get_oil_price_trend(db: Session) -> List[OilPriceTrend]:
         db.query(
             func.strftime("%Y", OilDB.date).label("year"),
             func.avg(OilDB.costs / OilDB.volume).label("average_price"),
-            func.min(OilDB.costs / OilDB.volume).label("min_price"),
-            func.max(OilDB.costs / OilDB.volume).label("max_price"),
         )
         .filter(OilDB.volume > 0)
         .group_by("year")
@@ -95,11 +93,6 @@ def get_oil_price_trend(db: Session) -> List[OilPriceTrend]:
     trends = []
     for r in results:
         trends.append(
-            OilPriceTrend(
-                year=int(r.year),
-                average_price=round(r.average_price, 3),
-                min_price=round(r.min_price, 3),
-                max_price=round(r.max_price, 3),
-            )
+            OilPriceTrend(year=int(r.year), average_price=round(r.average_price, 3))
         )
     return trends

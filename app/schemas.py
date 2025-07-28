@@ -37,8 +37,6 @@ class ElectricityOverallStats(BaseModel):
 class ElectricityPriceTrend(BaseModel):
     year: int
     average_price: float
-    min_price: float
-    max_price: float
 
 
 class ElectricityYearlySummary(BaseModel):
@@ -78,8 +76,6 @@ class OilOverallStats(BaseModel):
 class OilPriceTrend(BaseModel):
     year: int
     average_price: float
-    min_price: float
-    max_price: float
 
 
 class OilYearlySummary(BaseModel):
