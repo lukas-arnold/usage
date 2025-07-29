@@ -1,0 +1,93 @@
+<section class="form-section">
+    <h2>Neuen Strom-Eintrag hinzufügen</h2>
+    <form id="electricityForm">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="time_from">Zeitraum von:</label>
+                <input type="date" id="time_from" name="time_from" required>
+            </div>
+            <div class="form-group">
+                <label for="time_to">Zeitraum bis:</label>
+                <input type="date" id="time_to" name="time_to" required>
+            </div>
+            <div class="form-group">
+                <label for="usage">Verbrauch (kWh):</label>
+                <input type="number" id="usage" name="usage" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="costs">Kosten (€):</label>
+                <input type="number" id="costs" name="costs" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="retailer">Händler:</label>
+                <input type="text" id="retailer" name="retailer" required>
+            </div>
+            <div class="form-group">
+                <label for="payments">Zahlungen (€):</label>
+                <input type="number" id="payments" name="payments" step="0.01" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="note">Hinweis (optional):</label>
+            <textarea id="note" name="note" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Eintrag hinzufügen</button>
+    </form>
+</section>
+
+<section class="stats-section">
+    <h2>Gesamtstatistiken</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Gesamtverbrauch</h3>
+            <p><span id="electricity_total_usage">0.00</span> kWh</p>
+        </div>
+        <div class="stat-card">
+            <h3>Gesamtkosten</h3>
+            <p><span id="electricity_total_costs">0.00</span> €</p>
+        </div>
+        <div class="stat-card">
+            <h3>Anzahl Jahre</h3>
+            <p><span id="electricity_number_of_years">0</span></p>
+        </div>
+        <div class="stat-card">
+            <h3>Durchschnittsverbrauch</h3>
+            <p><span id="electricity_average_usage">0.00</span> kWh/Jahr</p>
+        </div>
+    </div>
+</section>
+
+<section class="chart-section">
+    <h2>Verbrauch und Kosten pro Jahr</h2>
+    <canvas id="electricityYearlySummaryChart"></canvas>
+</section>
+
+<section class="chart-section">
+    <h2>Preisverlauf</h2>
+    <canvas id="electricityPriceChart"></canvas>
+</section>
+
+<section class="table-section">
+    <h2>Alle Strom-Einträge</h2>
+    <div class="table-responsive">
+        <table id="electricity-entries-table">
+            <thead>
+                <tr>
+                    <th>Zeitraum von</th>
+                    <th>Zeitraum bis</th>
+                    <th>Verbrauch (kWh)</th>
+                    <th>Kosten (€)</th>
+                    <th>Preis pro kWh (€)</th>
+                    <th>Händler</th>
+                    <th>Zahlungen (€)</th>
+                    <th>Abschlag (€/Monat)</th>
+                    <th>Differenz (€)</th>
+                    <th>Hinweis</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+            <tbody id="electricity-entries-table-body">
+                </tbody>
+        </table>
+    </div>
+</section>

@@ -1,0 +1,110 @@
+<section class="form-section">
+    <h2>Neuen Wasser-Eintrag hinzufügen</h2>
+    <form id="waterForm">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="year">Jahr:</label>
+                <input type="number" id="year" name="year" min="1900" max="2100" required>
+            </div>
+            <div class="form-group">
+                <label for="volume_water">Volumen Wasser (m³):</label>
+                <input type="number" id="volume_water" name="volume_water" steps="1" required>
+            </div>
+            <div class="form-group">
+                <label for="costs_water">Kosten Wasser (€):</label>
+                <input type="number" id="costs_water" name="costs_water" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="payments">Zahlungen (€):</label>
+                <input type="number" id="payments" name="payments" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="volume_wastewater">Volumen Schmutzwasser (m³):</label>
+                <input type="number" id="volume_wastewater" name="volume_wastewater" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="costs_wastewater">Kosten Schmutzwasser (€):</label>
+                <input type="number" id="costs_wastewater" name="costs_wastewater" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="fixed_price">Festpreis:</label>
+                <input type="number" id="fixed_price" name="fixed_price" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="volume_rainwater">Volumen Niederschlagswasser (m³):</label>
+                <input type="number" id="volume_rainwater" name="volume_rainwater" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="costs_rainwater">Kosten Niederschlagswasser (€):</label>
+                <input type="number" id="costs_rainwater" name="costs_rainwater" step="0.01">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="note">Hinweis (optional):</label>
+            <textarea id="note" name="note" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Eintrag hinzufügen</button>
+    </form>
+</section>
+
+<section class="stats-section">
+    <h2>Gesamtstatistiken</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Gesamtvolumen</h3>
+            <p><span id="water_total_volume">0</span> m³</p>
+        </div>
+        <div class="stat-card">
+            <h3>Gesamtkosten</h3>
+            <p><span id="water_total_costs">0.00</span> €</p>
+        </div>
+        <div class="stat-card">
+            <h3>Anzahl Jahre</h3>
+            <p><span id="water_number_of_years">0</span></p>
+        </div>
+        <div class="stat-card">
+            <h3>Durchschnittsverbrauch</h3>
+            <p><span id="water_average_volume">0</span> m³/Jahr</p>
+        </div>
+    </div>
+</section>
+
+<section class="chart-section">
+    <h2>Verbrauch und Kosten pro Jahr</h2>
+    <canvas id="waterYearlySummaryChart"></canvas>
+</section>
+
+<section class="chart-section">
+    <h2>Preisverlauf</h2>
+    <canvas id="waterPriceChart"></canvas>
+</section>
+
+<section class="table-section">
+    <h2>Alle Wasser-Einträge</h2>
+    <div class="table-responsive">
+        <table id="water-entries-table">
+            <thead>
+                <tr>
+                    <th>Jahr</th>
+                    <th>Volumen Wasser (m³)</th>
+                    <th>Volumen Schmutzwasser (m³)</th>
+                    <th>Volumen Niederschlagswasser (m³)</th>
+                    <th>Kosten Wasser (€)</th>
+                    <th>Kosten Schmutzwasser (€)</th>
+                    <th>Kosten Regenwasser (€)</th>
+                    <th>Preis Wasser (€/m³)</th>
+                    <th>Preis Schmutzwasser (€/m³)</th>
+                    <th>Preis Niederschlagswasser (€/m³)</th>
+                    <th>Festpreis</th>
+                    <th>Zahlungen</th>
+                    <th>Abschlag (€/Monat)</th>
+                    <th>Differenz (€)</th>
+                    <th>Hinweis</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+            <tbody id="water-entries-table-body">
+                </tbody>
+        </table>
+    </div>
+</section>

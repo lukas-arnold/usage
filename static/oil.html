@@ -1,0 +1,81 @@
+<section class="form-section">
+    <h2>Neuen Heizöl-Eintrag hinzufügen</h2>
+    <form id="oilForm">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="date">Datum:</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label for="volume">Abnahmemenge (L):</label>
+                <input type="number" id="volume" name="volume" step="0.1" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="costs">Kosten (€):</label>
+                <input type="number" id="costs" name="costs" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="retailer">Händler:</label>
+                <input type="text" id="retailer" name="retailer" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="note">Hinweis (optional):</label>
+            <textarea id="note" name="note" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Eintrag hinzufügen</button>
+    </form>
+</section>
+
+<section class="stats-section">
+    <h2>Gesamtstatistiken</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Gesamtvolumen</h3>
+            <p><span id="oil_total_volume">0.00</span> L</p>
+        </div>
+        <div class="stat-card">
+            <h3>Gesamtkosten</h3>
+            <p><span id="oil_total_costs">0.00</span> €</p>
+        </div>
+        <div class="stat-card">
+            <h3>Anzahl Jahre</h3>
+            <p><span id="oil_number_of_years">0</span></p>
+        </div>
+        <div class="stat-card">
+            <h3>Durchschnittsverbrauch</h3>
+            <p><span id="oil_average_volume">0.00</span> L/Jahr</p>
+        </div>
+    </div>
+</section>
+
+<section class="chart-section">
+    <h2>Verbrauch und Kosten pro Jahr</h2>
+    <canvas id="oilYearlySummaryChart"></canvas>
+</section>
+
+<section class="chart-section">
+    <h2>Preisverlauf</h2>
+    <canvas id="oilPriceChart"></canvas>
+</section>
+
+<section class="table-section">
+    <h2>Alle Heizöl-Einträge</h2>
+    <div class="table-responsive">
+        <table id="oil-entries-table">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Abnahmemenge (L)</th>
+                    <th>Kosten (€)</th>
+                    <th>Preis (€/L)</th>
+                    <th>Händler</th>
+                    <th>Hinweis</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+            <tbody id="oil-entries-table-body">
+                </tbody>
+        </table>
+    </div>
+</section>
