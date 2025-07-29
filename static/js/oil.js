@@ -1,6 +1,6 @@
 // oil.js
 import { OilApi } from './api.js';
-import { showMessage, showConfirm, formatDate, destroyChart, storeChart } from './ui.js';
+import { showMessage, showConfirm, formatDate, destroyChart, storeChart, openModal } from './ui.js';
 
 /**
  * Initializes the Oil section, attaches event listeners, and loads data.
@@ -16,6 +16,8 @@ export function initializeOilSection() {
     loadOilOverallStats();
     loadOilPriceTrend();
     loadOilYearlySummary();
+
+    showFillLevelsModal();
 }
 
 /**
@@ -328,5 +330,120 @@ async function deleteOilEntry(id) {
     } catch (error) {
         console.error('Error deleting oil entry:', error);
         showMessage(`Fehler beim Löschen des Heizöl-Eintrags: ${error.message}`, 'error');
+    }
+}
+
+async function showFillLevelsModal() {
+    await loadFillLevelChart();
+    await loadFillLevels();
+    await handleOilFillLevelFormSubmit();
+    const form = document.getElementById('oilFillLevelForm');
+    if (form) {
+        form.addEventListener('submit', handleOilFillLevelFormSubmit);
+    }
+
+    const fillLevelsModal = document.getElementById("fillLevelsModal");
+    const fillLevelsButton = document.getElementById("openFillLevelsModal");
+    fillLevelsButton.addEventListener("click", () => fillLevelsModal.style.display = "block");
+}
+
+async function loadFillLevels() {
+    try {
+        const fillLevels = OilApi.getFillLevels();
+        const tableBody = document.getElementById("oil-fill-levels-table-body");
+        if(!tableBody) return;
+
+        tableBody.innerHTML = "";
+
+        fillLevels.forEach(level => {
+            const row = tableBody.insertRow();
+            row.dataset.id = level.id;
+
+            row.innerHTML = `
+                <td>${formatDate(level.date)}</td>
+                <td>${(level.height)}</td>
+            `
+        });
+    } catch (error) {
+        console.error('Error loading oil entries:', error);
+        showMessage(`Fehler beim Laden der Heizöl-Einträge: ${error.message}`, 'error');
+    }
+}
+
+async function handleOilFillLevelFormSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const data = {
+        date: formData.get('date'),
+        fill_level: parseFloat(formData.get('fillLevel')),
+    };
+
+    try {
+        await OilApi.addFillLevel(data);
+        showMessage('Heizöl-Füllstand erfolgreich hinzugefügt!', 'success');
+        form.reset();
+        loadFillLevels();
+    } catch (error) {
+        console.error('Error adding oil fill level:', error);
+        showMessage(`Fehler beim Hinzufügen des Heizöl-Füllstands: ${error.message}`, 'error');
+    }
+}
+
+async function loadFillLevelChart() {
+    try {
+        const fillLevels = await OilApi.getFillLevels();
+        const currentFileLevel = fillLevels.level && fillLevels.lengt > 0
+                                    ? fillLevels.level[0]
+                                    : null;
+        const fillLevelPercentage = 150 / currentFileLevel;
+
+        const ctx = document.getElementById("fillLevelChart").getContext('2d');
+        if (!ctx) return;
+        destroyChart('oilPriceChart'); // Destroy previous chart instance
+
+        const backgroundColors = fillLevelPercentage.map(percentage => {
+            if (percentage >= 60) return 'rgba(46, 204, 113, 0.8)';
+            if (percentage >= 30) return 'rgba(243, 156, 18, 0.8)';
+            return 'rgba(231, 76, 60, 0.8)';
+        });
+
+        const newChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: "Füllstand",
+                datasets: [{
+                    label: 'Heizölpreis (€/L)',
+                    data: fillLevelPercentage,
+                    backgroundColor: backgroundColors,
+                    borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        storeChart("fillLevelChart", newChart);
+    } catch (error) {
+        console.error('Error loading fill level chart:', error);
+        showMessage(`Fehler beim Laden des Heizöl-Füllstands: ${error.message}`, 'error');
     }
 }

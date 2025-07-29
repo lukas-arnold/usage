@@ -1,3 +1,47 @@
+<div id="fillLevelsModal" class="fillLevelsModal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Heizöl-Füllstände</h2>
+
+        <div>
+            <h3>Aktueller Füllstand</h3>
+             <canvas id="fillLevelChart"></canvas>
+        </div>
+
+        <section class="form-section">
+            <h3>Neuen Füllstand hinzufügen</h3>
+            <form id="oilFillLevelForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="date">Datum:</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fillLevel">Füllstand (cm):</label>
+                        <input type="number" id="fillLevel" name="fillLevel" step="0.1" min="0" required>
+                    </div>
+                <button type="submit" class="btn-primary">Füllstand hinzufügen</button>
+            </form>
+        </section>
+
+        <div>
+            <h3>Alle Füllstände</h3>
+            <table id="oil-fill-levels-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Füllstand (cm)</th>
+                    </tr>
+                </thead>
+                <tbody id="oil-fill-levels-table-body"></tbody>
+            </table>
+        </div>
+
+  </div>
+</div>
+
+<button class="btn-primary" id="openFillLevelsModal">Füllstände</button>
+
 <section class="form-section">
     <h2>Neuen Heizöl-Eintrag hinzufügen</h2>
     <form id="oilForm">

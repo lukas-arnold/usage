@@ -764,3 +764,8 @@ body[data-theme="dark"] .theme-switch input:checked + .slider:before {
 .modal{
     display: none;
 }
+
+.fillLevelsModal {
+    align-items: center;
+    width: 1200px;
+}
