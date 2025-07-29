@@ -381,7 +381,7 @@ async function handleOilFillLevelFormSubmit(event) {
     };
 
     try {
-        await OilApi.addFillLevel(data);
+        await OilApi.addFillLevelEntry(data);
         showMessage('Heizöl-Füllstand erfolgreich hinzugefügt!', 'success');
         form.reset();
         loadFillLevels();
@@ -393,7 +393,7 @@ async function handleOilFillLevelFormSubmit(event) {
 
 async function loadFillLevelChart() {
     try {
-        const fillLevels = await OilApi.getFillLevels();
+        const fillLevels = await OilApi.getFillLevelEntries();
         const currentFileLevel = fillLevels.level && fillLevels.lengt > 0
                                     ? fillLevels.level[0]
                                     : null;

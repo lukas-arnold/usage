@@ -33,6 +33,13 @@ class OilDB(Base, BaseModelMixin):
     note: Mapped[str | None] = mapped_column(nullable=True)
 
 
+class OilFillLevelDB(Base, BaseModelMixin):
+    __tablename__ = "oil_fill_level"
+
+    date: Mapped[date_] = mapped_column(nullable=False)
+    level: Mapped[float] = mapped_column(nullable=False)
+
+
 class WaterDB(Base, BaseModelMixin):
     __tablename__ = "water"
 

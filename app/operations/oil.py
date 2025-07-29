@@ -9,8 +9,14 @@ from app.operations.operations import (
     delete_entry,
     calculate_price,
 )
-from app.models import OilDB
-from app.schemas import OilCreate, OilOverallStats, OilYearlySummary, OilPriceTrend
+from app.models import OilDB, OilFillLevelDB
+from app.schemas import (
+    OilCreate,
+    OilOverallStats,
+    OilYearlySummary,
+    OilPriceTrend,
+    OilFillLevelsCreate,
+)
 
 
 def create_oil_entry(db: Session, schema: OilCreate):
@@ -96,3 +102,11 @@ def get_oil_price_trend(db: Session) -> List[OilPriceTrend]:
             OilPriceTrend(year=int(r.year), average_price=round(r.average_price, 3))
         )
     return trends
+
+
+def create_oil_fill_level_entry(db: Session, schema: OilFillLevelsCreate):
+    return create_entry(db, OilFillLevelDB, schema)
+
+
+def get_oil_fill_level_entries(db: Session):
+    return get_entries(db, OilFillLevelDB)

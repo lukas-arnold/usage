@@ -10,7 +10,10 @@ def create_entry(
     db: Session,
     model: Type[ModelType],
     entry_schema: Union[
-        schemas.ElectricityCreate, schemas.OilCreate, schemas.WaterCreate
+        schemas.ElectricityCreate,
+        schemas.OilCreate,
+        schemas.OilFillLevelsCreate,
+        schemas.WaterCreate,
     ],
 ) -> ModelType:
     db_entry = model(**entry_schema.model_dump())

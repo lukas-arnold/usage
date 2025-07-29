@@ -9,6 +9,8 @@ from app.schemas import (
     OilOverallStats,
     OilYearlySummary,
     OilPriceTrend,
+    OilFillLevelsCreate,
+    OilFillLevelsResponse,
 )
 from app.operations import oil
 
@@ -93,3 +95,30 @@ def get_oil_yearly_summary(db: Session = Depends(get_db_oil)):
 @oil_router.get("/stats/price_trend", response_model=List[OilPriceTrend])
 def get_oil_price_trend(db: Session = Depends(get_db_oil)):
     return oil.get_oil_price_trend(db)
+
+
+oil_router.post(
+    "/fill-level-entries",
+    response_model=OilFillLevelsResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+
+
+def create_oil_fill_level_entry(
+    entry: OilFillLevelsCreate, db: Session = Depends(get_db_oil)
+):
+    db_entry = oil.create_oil_fill_level_entry(db, entry)
+    return OilFillLevelsResponse(
+        id=db_entry.id, date=db_entry.date, level=db_entry.level
+    )
+
+
+@oil_router.get("/fill-level-entries", response_model=List[OilFillLevelsResponse])
+def read_oil_fill_level_entries(db: Session = Depends(get_db_oil)):
+    entries = oil.get_oil_fill_level_entries(db)
+    response_entries = []
+    for entry in entries:
+        response_entries.append(
+            OilFillLevelsResponse(id=entry.id, date=entry.date, level=entry.level)
+        )
+    return response_entries
