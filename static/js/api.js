@@ -107,7 +107,10 @@ export const OilApi = {
     },
     async addFillLevelEntry(data) {
         return apiRequest(`${API_BASE_OIL}/fill-level-entries`, 'POST', data);
-    }
+    },
+    async deleteFillLevelEntry(id) {
+        return apiRequest(`${API_BASE_OIL}/fill-level-entries/${id}`, 'DELETE');
+    },
 };
 
 // --- Water API Functions ---

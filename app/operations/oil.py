@@ -110,3 +110,7 @@ def create_oil_fill_level_entry(db: Session, schema: OilFillLevelsCreate):
 
 def get_oil_fill_level_entries(db: Session):
     return get_entries(db, OilFillLevelDB)
+
+
+def delete_oil_fill_level_entry(db: Session, entry_id: int):
+    return delete_entry(db, OilFillLevelDB, entry_id)

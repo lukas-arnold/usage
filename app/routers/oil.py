@@ -120,3 +120,12 @@ def read_oil_fill_level_entries(db: Session = Depends(get_db_oil)):
             OilFillLevelsResponse(id=entry.id, date=entry.date, level=entry.level)
         )
     return response_entries
+
+
+@oil_router.delete(
+    "/fill-level-entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_oil_fill_level_entry(entry_id: int, db: Session = Depends(get_db_oil)):
+    if not oil.delete_oil_fill_level_entry(db, entry_id):
+        raise HTTPException(status_code=404, detail="Oil entry not found")
+    return {"ok": True}

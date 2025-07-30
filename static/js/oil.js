@@ -364,7 +364,12 @@ async function loadFillLevels() {
             row.innerHTML = `
                 <td>${formatDate(level.date)}</td>
                 <td>${(level.level)}</td>
+                <td>
+                    <button class="btn-delete" data-id="${level.id}">Löschen</button>
+                </td>
             `;
+            // Attach event listener directly after creation for efficiency
+            row.querySelector('.btn-delete').addEventListener('click', () => confirmDeleteOilFillLevel(level.id));
         });
     } catch (error) {
         console.error('Error loading oil entries:', error);
@@ -392,6 +397,7 @@ async function handleOilFillLevelFormSubmit(event) {
         await OilApi.addFillLevelEntry(data);
         showMessage('Heizöl-Füllstand erfolgreich hinzugefügt!', 'success');
         form.reset();
+        loadFillLevelChart();
         loadFillLevels();
     } catch (error) {
         console.error('Error adding oil fill level:', error);
@@ -453,5 +459,21 @@ async function loadFillLevelChart() {
     } catch (error) {
         console.error('Error loading fill level chart:', error);
         showMessage(`Fehler beim Laden des Heizöl-Füllstands: ${error.message}`, 'error');
+    }
+}
+
+function confirmDeleteOilFillLevel(id) {
+    showConfirm('Möchten Sie diesen Heizöl-Füllstand wirklich löschen?', () => deleteOilFillLevelEntry(id));
+}
+
+async function deleteOilFillLevelEntry(id) {
+    try {
+        await OilApi.deleteFillLevelEntry(id);
+        showMessage('Heizöl-Füllstand erfolgreich gelöscht!', 'success');
+        await loadFillLevelChart();
+        await loadFillLevels();
+    } catch (error) {
+        console.error('Error deleting oil fill level entry:', error);
+        showMessage(`Fehler beim Löschen des Heizöl-Füllstands: ${error.message}`, 'error');
     }
 }
