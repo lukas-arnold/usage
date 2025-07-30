@@ -1,6 +1,6 @@
 // oil.js
 import { OilApi } from './api.js';
-import { showMessage, showConfirm, formatDate, destroyChart, storeChart, openModal } from './ui.js';
+import { showMessage, showConfirm, formatDate, destroyChart, storeChart } from './ui.js';
 
 /**
  * Initializes the Oil section, attaches event listeners, and loads data.
@@ -336,7 +336,7 @@ async function deleteOilEntry(id) {
 async function showFillLevelsModal() {
     await loadFillLevelChart();
     await loadFillLevels();
-    await handleOilFillLevelFormSubmit();
+
     const form = document.getElementById('oilFillLevelForm');
     if (form) {
         form.addEventListener('submit', handleOilFillLevelFormSubmit);
@@ -344,14 +344,16 @@ async function showFillLevelsModal() {
 
     const fillLevelsModal = document.getElementById("fillLevelsModal");
     const fillLevelsButton = document.getElementById("openFillLevelsModal");
-    fillLevelsButton.addEventListener("click", () => fillLevelsModal.style.display = "block");
+    if (fillLevelsButton && fillLevelsModal) {
+        fillLevelsButton.addEventListener("click", () => fillLevelsModal.style.display = "block");
+    }
 }
 
 async function loadFillLevels() {
     try {
-        const fillLevels = OilApi.getFillLevels();
+        const fillLevels = await OilApi.getFillLevelEntries();
         const tableBody = document.getElementById("oil-fill-levels-table-body");
-        if(!tableBody) return;
+        if (!tableBody) return;
 
         tableBody.innerHTML = "";
 
@@ -361,8 +363,8 @@ async function loadFillLevels() {
 
             row.innerHTML = `
                 <td>${formatDate(level.date)}</td>
-                <td>${(level.height)}</td>
-            `
+                <td>${(level.level)}</td>
+            `;
         });
     } catch (error) {
         console.error('Error loading oil entries:', error);
@@ -371,13 +373,19 @@ async function loadFillLevels() {
 }
 
 async function handleOilFillLevelFormSubmit(event) {
-    event.preventDefault();
+    if (event && typeof event.preventDefault === 'function') {
+        event.preventDefault();
+    } else {
+        console.warn("handleOilFillLevelFormSubmit called without event");
+        return;
+    }
+
     const form = event.target;
     const formData = new FormData(form);
 
     const data = {
         date: formData.get('date'),
-        fill_level: parseFloat(formData.get('fillLevel')),
+        level: parseFloat(formData.get('fillLevel')),
     };
 
     try {
@@ -394,27 +402,29 @@ async function handleOilFillLevelFormSubmit(event) {
 async function loadFillLevelChart() {
     try {
         const fillLevels = await OilApi.getFillLevelEntries();
-        const currentFileLevel = fillLevels.level && fillLevels.lengt > 0
-                                    ? fillLevels.level[0]
-                                    : null;
-        const fillLevelPercentage = 150 / currentFileLevel;
+        if (!Array.isArray(fillLevels) || fillLevels.length === 0) return;
 
-        const ctx = document.getElementById("fillLevelChart").getContext('2d');
+        const currentFillLevel = fillLevels[0].level ?? 0;
+        const percentage = Math.min(100, Math.round((currentFillLevel / 150) * 100));
+        const fillLevelPercentage = [percentage]; // wrap in array for chart
+
+        const ctx = document.getElementById("fillLevelChart")?.getContext('2d');
         if (!ctx) return;
+
         destroyChart('oilPriceChart'); // Destroy previous chart instance
 
-        const backgroundColors = fillLevelPercentage.map(percentage => {
-            if (percentage >= 60) return 'rgba(46, 204, 113, 0.8)';
-            if (percentage >= 30) return 'rgba(243, 156, 18, 0.8)';
+        const backgroundColors = fillLevelPercentage.map(p => {
+            if (p >= 60) return 'rgba(46, 204, 113, 0.8)';
+            if (p >= 30) return 'rgba(243, 156, 18, 0.8)';
             return 'rgba(231, 76, 60, 0.8)';
         });
 
         const newChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: "Füllstand",
+                labels: ['Füllstand'],
                 datasets: [{
-                    label: 'Heizölpreis (€/L)',
+                    label: 'Füllstand (%)',
                     data: fillLevelPercentage,
                     backgroundColor: backgroundColors,
                     borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
@@ -433,9 +443,7 @@ async function loadFillLevelChart() {
                         beginAtZero: true,
                         max: 100,
                         ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
+                            callback: value => value + '%'
                         }
                     }
                 }

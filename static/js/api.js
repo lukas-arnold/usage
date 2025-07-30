@@ -106,7 +106,7 @@ export const OilApi = {
         return apiRequest(`${API_BASE_OIL}/fill-level-entries`, 'GET');
     },
     async addFillLevelEntry(data) {
-        return apiRequest(`${API_BASE_OIL}/fill-levelentries`, 'POST', data);
+        return apiRequest(`${API_BASE_OIL}/fill-level-entries`, 'POST', data);
     }
 };
 

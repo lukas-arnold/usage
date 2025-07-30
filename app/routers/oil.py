@@ -97,13 +97,11 @@ def get_oil_price_trend(db: Session = Depends(get_db_oil)):
     return oil.get_oil_price_trend(db)
 
 
-oil_router.post(
+@oil_router.post(
     "/fill-level-entries",
     response_model=OilFillLevelsResponse,
     status_code=status.HTTP_201_CREATED,
 )
-
-
 def create_oil_fill_level_entry(
     entry: OilFillLevelsCreate, db: Session = Depends(get_db_oil)
 ):
