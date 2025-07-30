@@ -753,8 +753,6 @@ body[data-theme="dark"] .theme-switch input:checked + .slider:before {
 
     .modal-content {
         padding: 15px;
-        align-items: center;
-        justify-content: center;
     }
 
     .modal-content h2 {
@@ -763,19 +761,104 @@ body[data-theme="dark"] .theme-switch input:checked + .slider:before {
     }
 }
 
+/* Unify modal display property to avoid conflicts, it should be controlled by JS */
 .modal {
-    display: none;
-}
-
-.fillLevelsModal {
+    display: none; /* Hidden by default */
     position: fixed;
-    top: 0;
+    z-index: 1000;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: none;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.fillLevelsModal-content {
+    background-color: var(--modal-bg); /* Use modal background variable */
+    margin: 5% auto;
+    padding: 30px;
+    border: 1px solid var(--modal-border); /* Use modal border variable */
+    width: 90%;
+    max-width: 800px;
+    border-radius: 12px; /* Consistent with other modals */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
     overflow-y: auto;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* Consistent with other modals */
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fillLevelsModal h3 {
+    text-align: center;
+    color: var(--h-color); /* Use heading color for consistency */
+    margin-bottom: 20px; /* Add some space below heading */
+}
+
+/* Close button for fillLevelsModal - unify with general modal close */
+.fillLevelsModal-content .close {
+    color: var(--modal-close-color);
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.fillLevelsModal-content .close:hover,
+.fillLevelsModal-content .close:focus {
+    color: var(--text-color); /* Changes to main text color on hover */
+    text-decoration: none;
+}
+
+/* Responsive adjustments for smaller screens (fillLevelsModal specific) */
+@media (max-width: 768px) {
+    .fillLevelsModal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 20px;
+    }
+
+    .fillLevelsModal-content .close {
+        font-size: 28px;
+        top: 10px;
+        right: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .fillLevelsModal-content {
+        margin: 5% auto;
+        padding: 15px;
+    }
+}
+
+#openFillLevelsModal {
+    display: block;
+    margin: 30px auto; /* Increased margin for better separation */
+    font-size: 1.3rem; /* Slightly larger font */
+    padding: 15px 30px; /* More standard button padding */
+    width: auto;
+    background-color: var(--btn-primary-bg); /* Use primary button color */
+    color: white; /* Text color for the button */
+    border: none;
+    border-radius: 8px; /* Slightly more rounded corners */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Add subtle shadow */
+    font-weight: 600; /* Make text bolder */
+}
+
+#openFillLevelsModal:hover {
+    background-color: var(--btn-primary-hover-bg); /* Darker on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }

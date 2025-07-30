@@ -528,14 +528,10 @@ async function loadFillLevelTrend() {
                     y: {
                         beginAtZero: true,
                         min: 0,
-                        max: 150,
-                        title: {
-                            display: true,
-                            text: 'Füllstand (cm)',
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            }
+                        max: 160,
+                        display: true,
+                        ticks: {
+                            callback: value => value + ' cm'
                         }
                     },
                     x: {
