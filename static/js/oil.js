@@ -323,10 +323,9 @@ async function deleteOilEntry(id) {
     try {
         await OilApi.deleteEntry(id);
         showMessage('Heizöl-Eintrag erfolgreich gelöscht!', 'success');
-        loadOilOverallStats();
-        loadOilYearlySummary();
-        loadOilPriceTrend();
-        loadOilEntries();
+        await loadFillLevelChart();
+        await loadFillLevelTrend();
+        await loadFillLevels();
     } catch (error) {
         console.error('Error deleting oil entry:', error);
         showMessage(`Fehler beim Löschen des Heizöl-Eintrags: ${error.message}`, 'error');
@@ -335,6 +334,7 @@ async function deleteOilEntry(id) {
 
 async function showFillLevelsModal() {
     await loadFillLevelChart();
+    await loadFillLevelTrend();
     await loadFillLevels();
 
     const form = document.getElementById('oilFillLevelForm');
@@ -398,6 +398,7 @@ async function handleOilFillLevelFormSubmit(event) {
         showMessage('Heizöl-Füllstand erfolgreich hinzugefügt!', 'success');
         form.reset();
         loadFillLevelChart();
+        loadFillLevelTrend();
         loadFillLevels();
     } catch (error) {
         console.error('Error adding oil fill level:', error);
@@ -417,7 +418,7 @@ async function loadFillLevelChart() {
         const ctx = document.getElementById("fillLevelChart")?.getContext('2d');
         if (!ctx) return;
 
-        destroyChart('oilPriceChart'); // Destroy previous chart instance
+        destroyChart('fillLevelChart'); // Destroy previous chart instance
 
         const backgroundColors = fillLevelPercentage.map(p => {
             if (p >= 60) return 'rgba(46, 204, 113, 0.8)';
@@ -462,6 +463,102 @@ async function loadFillLevelChart() {
     }
 }
 
+async function loadFillLevelTrend() {
+    try {
+        const fillLevels = await OilApi.getFillLevelEntries();
+        const ctx = document.getElementById('fillLevelTrend')?.getContext('2d');
+
+        if (!ctx) {
+            console.warn('fillLevelTrend canvas not found, skipping chart rendering.');
+            return;
+        }
+
+        destroyChart('fillLevelTrend');
+
+        const labels = [];
+        const levels = [];
+
+        fillLevels.forEach(d => {
+            if (typeof d.level === 'number' && !isNaN(d.level)) {
+                const formattedDate = new Date(d.date).toLocaleDateString('de-DE');
+                labels.push(formattedDate);
+                levels.push(d.level);
+            }
+        });
+
+        if (labels.length === 0) {
+            console.warn('Keine gültigen Daten für Füllstandstrend vorhanden.');
+            return;
+        }
+
+        const newChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Füllstand (cm)',
+                    data: levels,
+                    backgroundColor: 'rgba(255, 206, 86, 0.7)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: 150,
+                        title: {
+                            display: true,
+                            text: 'Füllstand (cm)',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Datum',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y + ' cm';
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        storeChart('fillLevelTrend', newChart);
+    } catch (error) {
+        console.error('Error loading oil fill level trend:', error);
+        showMessage(`Fehler beim Laden der jährlichen Heizöl-Füllstand-Trends: ${error.message}`, 'error');
+    }
+}
+
 function confirmDeleteOilFillLevel(id) {
     showConfirm('Möchten Sie diesen Heizöl-Füllstand wirklich löschen?', () => deleteOilFillLevelEntry(id));
 }
@@ -471,6 +568,7 @@ async function deleteOilFillLevelEntry(id) {
         await OilApi.deleteFillLevelEntry(id);
         showMessage('Heizöl-Füllstand erfolgreich gelöscht!', 'success');
         await loadFillLevelChart();
+        await loadFillLevelTrend();
         await loadFillLevels();
     } catch (error) {
         console.error('Error deleting oil fill level entry:', error);
