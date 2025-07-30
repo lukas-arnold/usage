@@ -753,6 +753,8 @@ body[data-theme="dark"] .theme-switch input:checked + .slider:before {
 
     .modal-content {
         padding: 15px;
+        align-items: center;
+        justify-content: center;
     }
 
     .modal-content h2 {
@@ -761,11 +763,19 @@ body[data-theme="dark"] .theme-switch input:checked + .slider:before {
     }
 }
 
-.modal{
+.modal {
     display: none;
 }
 
 .fillLevelsModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    justify-content: center;
     align-items: center;
-    width: 1200px;
+    z-index: 1000;
+    overflow-y: auto;
 }

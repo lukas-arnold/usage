@@ -345,8 +345,25 @@ async function showFillLevelsModal() {
     const fillLevelsModal = document.getElementById("fillLevelsModal");
     const fillLevelsButton = document.getElementById("openFillLevelsModal");
     if (fillLevelsButton && fillLevelsModal) {
-        fillLevelsButton.addEventListener("click", () => fillLevelsModal.style.display = "block");
+        // Open modal
+        document.getElementById('openFillLevelsModal').addEventListener('click', function () {
+        document.getElementById('fillLevelsModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        });
+        // Close modal by clicking on "X"
+        document.querySelector('#fillLevelsModal .close').addEventListener('click', function () {
+        document.getElementById('fillLevelsModal').style.display = 'none';
+        document.body.style.overflow = '';
+        });
+        // Close modal by clicking outside of modal
+        document.getElementById('fillLevelsModal').addEventListener('click', function (event) {
+        if (event.target === this) {
+            this.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        });
     }
+
 }
 
 async function loadFillLevels() {
