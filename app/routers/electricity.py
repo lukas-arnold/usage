@@ -57,6 +57,7 @@ def read_electricity_entries(db: Session = Depends(get_db_electricity)):
                 **derived_fields,
             )
         )
+    response_entries.sort(key=lambda x: x.time_from, reverse=True)
     return response_entries
 
 

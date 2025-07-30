@@ -17,13 +17,11 @@ from app.operations import oil
 oil_router = APIRouter(prefix="/oil", tags=["Oil"])
 
 
-oil_router.post(
+@oil_router.post(
     "/entries",
     response_model=OilResponse,
     status_code=status.HTTP_201_CREATED,
 )
-
-
 def create_oil_entry(entry: OilCreate, db: Session = Depends(get_db_oil)):
     db_entry = oil.create_oil_entry(db, entry)
     derived_fields = oil.calculate_oil_derived_fields(db_entry)
@@ -55,6 +53,7 @@ def read_oil_entries(db: Session = Depends(get_db_oil)):
                 **derived_fields
             )
         )
+    response_entries.sort(key=lambda x: x.date, reverse=True)
     return response_entries
 
 
@@ -119,6 +118,7 @@ def read_oil_fill_level_entries(db: Session = Depends(get_db_oil)):
         response_entries.append(
             OilFillLevelsResponse(id=entry.id, date=entry.date, level=entry.level)
         )
+    response_entries.sort(key=lambda x: x.date, reverse=True)
     return response_entries
 
 

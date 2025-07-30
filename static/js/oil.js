@@ -1,6 +1,6 @@
 // oil.js
 import { OilApi } from './api.js';
-import { showMessage, showConfirm, formatDate, destroyChart, storeChart } from './ui.js';
+import { showMessage, showConfirm, formatDate, getTodaysDate, destroyChart, storeChart } from './ui.js';
 
 /**
  * Initializes the Oil section, attaches event listeners, and loads data.
@@ -337,6 +337,9 @@ async function showFillLevelsModal() {
     await loadFillLevelTrend();
     await loadFillLevels();
 
+    const fillLevelDate = document.getElementById("fillLevelDate");
+    fillLevelDate.value = getTodaysDate();
+
     const form = document.getElementById('oilFillLevelForm');
     if (form) {
         form.addEventListener('submit', handleOilFillLevelFormSubmit);
@@ -406,7 +409,7 @@ async function handleOilFillLevelFormSubmit(event) {
     const formData = new FormData(form);
 
     const data = {
-        date: formData.get('date'),
+        date: formData.get('fillLevelDate'),
         level: parseFloat(formData.get('fillLevel')),
     };
 

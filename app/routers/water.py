@@ -62,6 +62,7 @@ def read_water_entries(db: Session = Depends(get_db_water)):
                 **derived_fields
             )
         )
+    response_entries.sort(key=lambda x: x.year, reverse=True)
     return response_entries
 
 

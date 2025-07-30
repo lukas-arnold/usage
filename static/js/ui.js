@@ -84,6 +84,19 @@ export function formatDate(dateString) {
 }
 
 /**
+ * Returns the date of today.
+ * @returns {string} Todays date.
+ */
+export function getTodaysDate() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    return todayStr;
+}
+
+/**
  * Destroys a specific Chart.js instance.
  * @param {string} chartKey - The key used to store the chart instance in `activeCharts`.
  */
