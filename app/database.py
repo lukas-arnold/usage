@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.models import Base
+from app.models import BaseElectricity, BaseOil, BaseWater
 
 SQLALCHEMY_ELECTRICITY_DATABASE_URL = "sqlite:///./electricity.db"
 SQLALCHEMY_OIL_DATABASE_URL = "sqlite:///./oil.db"
@@ -24,9 +24,9 @@ SessionLocalWater = sessionmaker(autocommit=False, autoflush=False, bind=engine_
 
 
 def init_db():
-    Base.metadata.create_all(bind=engine_electricity)
-    Base.metadata.create_all(bind=engine_oil)
-    Base.metadata.create_all(bind=engine_water)
+    BaseElectricity.metadata.create_all(bind=engine_electricity)
+    BaseOil.metadata.create_all(bind=engine_oil)
+    BaseWater.metadata.create_all(bind=engine_water)
 
 
 def get_db_electricity():
