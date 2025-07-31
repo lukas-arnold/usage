@@ -42,8 +42,8 @@
     --message-error-bg: #dc3545;
 }
 
-/* Dark theme colors */
-body[data-theme="dark"] {
+/* Dark theme colors using .dark-mode class */
+.dark-mode {
     --body-bg: #2c2c2c;
     --container-bg: #3c3c3c;
     --text-color: #e0e0e0;
@@ -138,89 +138,27 @@ h1 {
     padding-right: 20px;
 }
 
-.theme-switch {
-    display: inline-block;
-    height: 34px;
-    position: relative;
-    width: 60px;
-}
+/* The previous logic for .theme-switch, .slider, .theme-icon-label, etc. is no longer needed
+   because your new JS handles the icon and styling directly by adding a class.
+   The old switch/slider CSS can be removed.
+   You will only need to style the new #darkModeToggle button.
+*/
 
-.theme-switch input {
-    display: none;
-}
-
-.slider {
-    background-color: #ccc;
-    bottom: 0;
+#darkModeToggle {
+    font-size: 1.2em; /* Adjust size as needed */
     cursor: pointer;
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    transition: .4s;
-    border-radius: 34px;
-}
-
-.slider:before {
-    background-color: #fff;
-    bottom: 4px;
-    content: "";
-    height: 26px;
-    left: 4px;
-    position: absolute;
-    transition: .4s;
-    width: 26px;
-    border-radius: 50%;
-}
-
-input:checked + .slider {
-    background-color: var(--btn-primary-bg); /* Uses primary color for checked state */
-}
-
-input:checked + .slider:before {
-    transform: translateX(26px);
-}
-
-/* Styles for the sun/moon icons */
-.theme-icon-label {
-    margin-left: 10px; /* Space between switch and icon */
-    padding-bottom: 10px;
-    font-size: 1.2em;
-    display: flex; /* To align icons if both were visible */
+    color: var(--text-color); /* Color will change with the theme via variables */
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
     align-items: center;
-    color: var(--text-color); /* Inherit general text color, adjusted by theme */
+    justify-content: center;
+    transition: color 0.3s ease;
 }
 
-/* Styles for the sun/moon icons */
-/* In Light Mode, show the MOON icon (to click to go to Dark Mode) */
-.sun-icon {
-    display: none; /* Hide sun by default (Light Mode) */
-}
-
-.moon-icon {
-    display: inline-block; /* Show moon by default (Light Mode) */
-}
-
-/* Dark mode specific styles for icons */
-/* In Dark Mode, show the SUN icon (to click to go to Light Mode) */
-body[data-theme="dark"] .sun-icon {
-    display: inline-block; /* Show sun in dark mode */
-}
-
-body[data-theme="dark"] .moon-icon {
-    display: none; /* Hide moon in dark mode */
-}
-
-/* Ensure the text color of the icon label also adjusts */
-body[data-theme="dark"] .theme-icon-label {
-    color: var(--text-color); /* Will use the dark theme text color variable */
-}
-
-/* Adjust wrapper spacing if needed */
-.theme-switch-wrapper em {
-    /* Existing style for 'Dark Mode' text, ensure it doesn't conflict too much */
-    /* You might want to remove 'margin-left: 10px;' from this if it's there,
-       as we've added it to .theme-icon-label */
+#darkModeToggle:hover {
+    opacity: 0.8;
 }
 
 /* Tab Navigation */
@@ -390,7 +328,6 @@ body[data-theme="dark"] .theme-icon-label {
     background-color: var(--btn-edit-hover-bg);
     transform: translateY(-1px);
 }
-
 
 /* Stats Section */
 .stats-grid {
@@ -592,44 +529,23 @@ table tr:hover {
 }
 
 /* Chart.js Tooltip styles (can still be useful even with JS color fix) */
-body[data-theme="dark"] .chartjs-tooltip {
+.dark-mode .chartjs-tooltip {
     background-color: rgba(60, 60, 60, 0.9) !important;
     color: #e0e0e0 !important;
     border: 1px solid #555 !important;
 }
 
-body[data-theme="dark"] .chartjs-tooltip-header {
+.dark-mode .chartjs-tooltip-header {
     background-color: rgba(40, 40, 40, 0.9) !important;
     border-bottom: 1px solid #555 !important;
 }
 
-body[data-theme="dark"] .chartjs-tooltip-body {
+.dark-mode .chartjs-tooltip-body {
     color: #e0e0e0 !important;
 }
 
-body[data-theme="dark"] .chartjs-tooltip-footer {
+.dark-mode .chartjs-tooltip-footer {
     border-top: 1px solid #555 !important;
-}
-
-/* Theme Switch specific styles for dark mode */
-body[data-theme="dark"] .theme-switch-wrapper em {
-    color: #e0e0e0; /* Ensure 'Dark Mode' text is visible */
-}
-
-body[data-theme="dark"] .theme-switch .slider {
-    background-color: #6c757d; /* Adjust slider background for dark mode */
-}
-
-body[data-theme="dark"] .theme-switch input:checked + .slider {
-    background-color: var(--btn-primary-bg); /* Slider active color for dark mode (using primary blue) */
-}
-
-body[data-theme="dark"] .theme-switch input:focus + .slider {
-    box-shadow: 0 0 1px var(--btn-primary-bg); /* Focus shadow for dark mode */
-}
-
-body[data-theme="dark"] .theme-switch input:checked + .slider:before {
-    background-color: #f1f1f1; /* Slider thumb color for dark mode */
 }
 
 /* Responsive Adjustments */

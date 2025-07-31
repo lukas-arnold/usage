@@ -1,30 +1,53 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const themeIconToggle = document.getElementById('theme-icon-toggle'); // New ID for the icon container
-    const body = document.body;
+const darkModeToggle = document.getElementById('darkModeToggle');
 
-    // Load theme preference from local storage
-    const currentTheme = localStorage.getItem('theme');
-    if (currentTheme) {
-        body.setAttribute('data-theme', currentTheme);
+/**
+ * Applies the stored theme or the system preference.
+ */
+function applyTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>'; // Sun icon for dark mode
+    } else if (savedTheme === 'light') {
+        document.body.classList.remove('dark-mode');
+        if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>'; // Moon icon for light mode
     } else {
-        // Optional: Set default theme to light if no preference found
-        body.setAttribute('data-theme', 'light');
-        localStorage.setItem('theme', 'light');
-    }
-
-    // Toggle dark mode function
-    function toggleDarkMode() {
-        if (body.getAttribute('data-theme') === 'dark') {
-            body.setAttribute('data-theme', 'light'); // Switch to light
-            localStorage.setItem('theme', 'light');
+        // If no theme is saved, use system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
+            if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
         } else {
-            body.setAttribute('data-theme', 'dark'); // Switch to dark
-            localStorage.setItem('theme', 'dark');
+            document.body.classList.remove('dark-mode');
+            if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
         }
     }
+}
 
-    // Event listener for the icon container
-    if (themeIconToggle) {
-        themeIconToggle.addEventListener('click', toggleDarkMode);
+/**
+ * Toggles dark mode and saves preference.
+ */
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('theme', 'dark');
+        if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+        localStorage.setItem('theme', 'light');
+        if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+}
+
+// Apply theme when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', applyTheme);
+
+// Add event listener to the toggle button
+if (darkModeToggle) {
+    darkModeToggle.addEventListener('click', toggleDarkMode);
+}
+
+// Listen for changes in system color scheme preference (only if no manual preference is set)
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+    if (!localStorage.getItem('theme')) {
+        applyTheme();
     }
 });
