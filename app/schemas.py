@@ -84,6 +84,19 @@ class OilYearlySummary(BaseModel):
     total_costs: float
 
 
+class OilFillLevels(BaseModel):
+    date: date
+    level: float
+
+
+class OilFillLevelsCreate(OilFillLevels):
+    pass
+
+
+class OilFillLevelsResponse(OilFillLevels):
+    id: int
+
+
 class Water(BaseModel):
     year: int
     volume_water: int

@@ -80,9 +80,20 @@ export function showConfirm(message, callback) {
 export function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
-    // Add 1 day to account for potential timezone issues turning YYYY-MM-DD into previous day in UTC
-    date.setDate(date.getDate() + 1);
     return date.toLocaleDateString('de-DE', DATE_FORMAT_OPTIONS);
+}
+
+/**
+ * Returns the date of today.
+ * @returns {string} Todays date.
+ */
+export function getTodaysDate() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    return todayStr;
 }
 
 /**

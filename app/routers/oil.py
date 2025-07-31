@@ -9,19 +9,19 @@ from app.schemas import (
     OilOverallStats,
     OilYearlySummary,
     OilPriceTrend,
+    OilFillLevelsCreate,
+    OilFillLevelsResponse,
 )
 from app.operations import oil
 
 oil_router = APIRouter(prefix="/oil", tags=["Oil"])
 
 
-oil_router.post(
+@oil_router.post(
     "/entries",
     response_model=OilResponse,
     status_code=status.HTTP_201_CREATED,
 )
-
-
 def create_oil_entry(entry: OilCreate, db: Session = Depends(get_db_oil)):
     db_entry = oil.create_oil_entry(db, entry)
     derived_fields = oil.calculate_oil_derived_fields(db_entry)
@@ -53,6 +53,7 @@ def read_oil_entries(db: Session = Depends(get_db_oil)):
                 **derived_fields
             )
         )
+    response_entries.sort(key=lambda x: x.date, reverse=True)
     return response_entries
 
 
@@ -93,3 +94,38 @@ def get_oil_yearly_summary(db: Session = Depends(get_db_oil)):
 @oil_router.get("/stats/price_trend", response_model=List[OilPriceTrend])
 def get_oil_price_trend(db: Session = Depends(get_db_oil)):
     return oil.get_oil_price_trend(db)
+
+
+@oil_router.post(
+    "/fill-level-entries",
+    response_model=OilFillLevelsResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_oil_fill_level_entry(
+    entry: OilFillLevelsCreate, db: Session = Depends(get_db_oil)
+):
+    db_entry = oil.create_oil_fill_level_entry(db, entry)
+    return OilFillLevelsResponse(
+        id=db_entry.id, date=db_entry.date, level=db_entry.level
+    )
+
+
+@oil_router.get("/fill-level-entries", response_model=List[OilFillLevelsResponse])
+def read_oil_fill_level_entries(db: Session = Depends(get_db_oil)):
+    entries = oil.get_oil_fill_level_entries(db)
+    response_entries = []
+    for entry in entries:
+        response_entries.append(
+            OilFillLevelsResponse(id=entry.id, date=entry.date, level=entry.level)
+        )
+    response_entries.sort(key=lambda x: x.date, reverse=True)
+    return response_entries
+
+
+@oil_router.delete(
+    "/fill-level-entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_oil_fill_level_entry(entry_id: int, db: Session = Depends(get_db_oil)):
+    if not oil.delete_oil_fill_level_entry(db, entry_id):
+        raise HTTPException(status_code=404, detail="Oil entry not found")
+    return {"ok": True}

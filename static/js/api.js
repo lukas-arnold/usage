@@ -101,7 +101,16 @@ export const OilApi = {
     },
     async getYearlySummary() {
         return apiRequest(`${API_BASE_OIL}/stats/yearly_summary`, 'GET');
-    }
+    },
+    async getFillLevelEntries() {
+        return apiRequest(`${API_BASE_OIL}/fill-level-entries`, 'GET');
+    },
+    async addFillLevelEntry(data) {
+        return apiRequest(`${API_BASE_OIL}/fill-level-entries`, 'POST', data);
+    },
+    async deleteFillLevelEntry(id) {
+        return apiRequest(`${API_BASE_OIL}/fill-level-entries/${id}`, 'DELETE');
+    },
 };
 
 // --- Water API Functions ---
