@@ -22,6 +22,9 @@ water_router = APIRouter(prefix="/water", tags=["Water"])
     status_code=status.HTTP_201_CREATED,
 )
 def create_water_entry(entry: WaterCreate, db: Session = Depends(get_db_water)):
+    """
+    Create a new water entry.
+    """
     db_entry = water.create_water_entry(db, entry)
     derived_fields = water.calculate_water_derived_fields(db_entry)
     return WaterResponse(
@@ -42,6 +45,11 @@ def create_water_entry(entry: WaterCreate, db: Session = Depends(get_db_water)):
 
 @water_router.get("/entries", response_model=List[WaterResponse])
 def read_water_entries(db: Session = Depends(get_db_water)):
+    """
+    Retrieve a list of all water entries.
+
+    Returns all water entries, sorted by year in descending order.
+    """
     entries = water.get_water_entries(db)
     response_entries = []
     for entry in entries:
@@ -68,6 +76,11 @@ def read_water_entries(db: Session = Depends(get_db_water)):
 
 @water_router.get("/entries/{entry_id}", response_model=WaterResponse)
 def read_water_entry(entry_id: int, db: Session = Depends(get_db_water)):
+    """
+    Retrieve a single water entry by its ID.
+
+    Raises a 404 error if the entry is not found.
+    """
     db_entry = water.get_water_entry(db, entry_id)
     if db_entry is None:
         raise HTTPException(status_code=404, detail="Water entry not found")
@@ -90,6 +103,11 @@ def read_water_entry(entry_id: int, db: Session = Depends(get_db_water)):
 
 @water_router.delete("/entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_water_entry(entry_id: int, db: Session = Depends(get_db_water)):
+    """
+    Delete a water entry by its ID.
+
+    Raises a 404 error if the entry is not found.
+    """
     if not water.delete_water_entry(db, entry_id):
         raise HTTPException(status_code=404, detail="Water entry not found")
     return {"ok": True}
@@ -97,14 +115,23 @@ def delete_water_entry(entry_id: int, db: Session = Depends(get_db_water)):
 
 @water_router.get("/stats/overall", response_model=WaterOverallStats)
 def get_water_overall_stats(db: Session = Depends(get_db_water)):
+    """
+    Retrieve overall statistics for water entries.
+    """
     return water.get_water_overall_stats(db)
 
 
 @water_router.get("/stats/yearly_summary", response_model=List[WaterYearlySummary])
 def get_water_yearly_summary(db: Session = Depends(get_db_water)):
+    """
+    Retrieve a yearly summary of water data.
+    """
     return water.get_water_yearly_summary(db)
 
 
 @water_router.get("/stats/price_trend", response_model=List[WaterPriceTrend])
 def get_water_price_trend(db: Session = Depends(get_db_water)):
+    """
+    Retrieve the price trend for water.
+    """
     return water.get_water_price_trend(db)

@@ -23,6 +23,9 @@ electricity_router = APIRouter(prefix="/electricity", tags=["Electricity"])
 def create_electricity_entry(
     entry: ElectricityCreate, db: Session = Depends(get_db_electricity)
 ):
+    """
+    Create a new electricity entry.
+    """
     db_entry = electricity.create_electricity_entry(db, entry)
     derived_fields = electricity.calculate_electricity_derived_fields(db_entry)
     return ElectricityResponse(
@@ -40,6 +43,11 @@ def create_electricity_entry(
 
 @electricity_router.get("/entries", response_model=List[ElectricityResponse])
 def read_electricity_entries(db: Session = Depends(get_db_electricity)):
+    """
+    Retrieve a list of all electricity entries.
+
+    Returns all electricity entries, sorted by 'time_from' in descending order.
+    """
     entries = electricity.get_electricity_entries(db)
     response_entries = []
     for entry in entries:
@@ -63,6 +71,11 @@ def read_electricity_entries(db: Session = Depends(get_db_electricity)):
 
 @electricity_router.get("/entries/{entry_id}", response_model=ElectricityResponse)
 def read_electricity_entry(entry_id: int, db: Session = Depends(get_db_electricity)):
+    """
+    Retrieve a single electricity entry by its ID.
+
+    Raises a 404 error if the entry is not found.
+    """
     db_entry = electricity.get_electricity_entry(db, entry_id)
     if db_entry is None:
         raise HTTPException(status_code=404, detail="Electricity entry not found")
@@ -84,6 +97,11 @@ def read_electricity_entry(entry_id: int, db: Session = Depends(get_db_electrici
     "/entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT
 )
 def delete_electricity_entry(entry_id: int, db: Session = Depends(get_db_electricity)):
+    """
+    Delete an electricity entry by its ID.
+
+    Raises a 404 error if the entry is not found.
+    """
     if not electricity.delete_electricity_entry(db, entry_id):
         raise HTTPException(status_code=404, detail="Electricity entry not found")
     return {"ok": True}
@@ -91,6 +109,9 @@ def delete_electricity_entry(entry_id: int, db: Session = Depends(get_db_electri
 
 @electricity_router.get("/stats/overall", response_model=ElectricityOverallStats)
 def get_electricity_overall_stats(db: Session = Depends(get_db_electricity)):
+    """
+    Retrieve overall statistics for electricity entries.
+    """
     return electricity.get_electricity_overall_stats(db)
 
 
@@ -98,6 +119,9 @@ def get_electricity_overall_stats(db: Session = Depends(get_db_electricity)):
     "/stats/yearly_summary", response_model=List[ElectricityYearlySummary]
 )
 def get_electricity_yearly_summary_data(db: Session = Depends(get_db_electricity)):
+    """
+    Retrieve a yearly summary of electricity data.
+    """
     return electricity.get_electricity_yearly_summary(db)
 
 
@@ -105,4 +129,7 @@ def get_electricity_yearly_summary_data(db: Session = Depends(get_db_electricity
     "/stats/price_trend", response_model=List[ElectricityPriceTrend]
 )
 def get_electricity_price_trend(db: Session = Depends(get_db_electricity)):
+    """
+    Retrieve the price trend for electricity.
+    """
     return electricity.get_electricity_price_trend(db)

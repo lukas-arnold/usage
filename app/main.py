@@ -8,12 +8,12 @@ from app.routers.electricity import electricity_router
 from app.routers.oil import oil_router
 from app.routers.water import water_router
 
+init_db()
 
 app = FastAPI(
     title="Verbrauchsübersicht",
 )
 
-init_db()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

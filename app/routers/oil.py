@@ -23,6 +23,9 @@ oil_router = APIRouter(prefix="/oil", tags=["Oil"])
     status_code=status.HTTP_201_CREATED,
 )
 def create_oil_entry(entry: OilCreate, db: Session = Depends(get_db_oil)):
+    """
+    Create a new oil entry.
+    """
     db_entry = oil.create_oil_entry(db, entry)
     derived_fields = oil.calculate_oil_derived_fields(db_entry)
     return OilResponse(
@@ -38,6 +41,11 @@ def create_oil_entry(entry: OilCreate, db: Session = Depends(get_db_oil)):
 
 @oil_router.get("/entries", response_model=List[OilResponse])
 def read_oil_entries(db: Session = Depends(get_db_oil)):
+    """
+    Retrieve a list of all oil entries.
+
+    Returns all oil entries, sorted by date in descending order.
+    """
     entries = oil.get_oil_entries(db)
     response_entries = []
     for entry in entries:
@@ -59,6 +67,11 @@ def read_oil_entries(db: Session = Depends(get_db_oil)):
 
 @oil_router.get("/entries/{entry_id}", response_model=OilResponse)
 def read_oil_entry(entry_id: int, db: Session = Depends(get_db_oil)):
+    """
+    Retrieve a single oil entry by its ID.
+
+    Raises a 404 error if the entry is not found.
+    """
     db_entry = oil.get_oil_entry(db, entry_id)
     if db_entry is None:
         raise HTTPException(status_code=404, detail="Oil entry not found")
@@ -76,6 +89,11 @@ def read_oil_entry(entry_id: int, db: Session = Depends(get_db_oil)):
 
 @oil_router.delete("/entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_oil_entry(entry_id: int, db: Session = Depends(get_db_oil)):
+    """
+    Delete an oil entry by its ID.
+
+    Raises a 404 error if the entry is not found.
+    """
     if not oil.delete_oil_entry(db, entry_id):
         raise HTTPException(status_code=404, detail="Oil entry not found")
     return {"ok": True}
@@ -83,16 +101,25 @@ def delete_oil_entry(entry_id: int, db: Session = Depends(get_db_oil)):
 
 @oil_router.get("/stats/overall", response_model=OilOverallStats)
 def get_oil_overall_stats(db: Session = Depends(get_db_oil)):
+    """
+    Retrieve overall statistics for oil entries.
+    """
     return oil.get_oil_overall_stats(db)
 
 
 @oil_router.get("/stats/yearly_summary", response_model=List[OilYearlySummary])
 def get_oil_yearly_summary(db: Session = Depends(get_db_oil)):
+    """
+    Retrieve a yearly summary of oil data.
+    """
     return oil.get_oil_yearly_summary(db)
 
 
 @oil_router.get("/stats/price_trend", response_model=List[OilPriceTrend])
 def get_oil_price_trend(db: Session = Depends(get_db_oil)):
+    """
+    Retrieve the price trend for oil.
+    """
     return oil.get_oil_price_trend(db)
 
 
@@ -104,6 +131,9 @@ def get_oil_price_trend(db: Session = Depends(get_db_oil)):
 def create_oil_fill_level_entry(
     entry: OilFillLevelsCreate, db: Session = Depends(get_db_oil)
 ):
+    """
+    Create a new oil fill level entry.
+    """
     db_entry = oil.create_oil_fill_level_entry(db, entry)
     return OilFillLevelsResponse(
         id=db_entry.id, date=db_entry.date, level=db_entry.level
@@ -112,6 +142,11 @@ def create_oil_fill_level_entry(
 
 @oil_router.get("/fill-level-entries", response_model=List[OilFillLevelsResponse])
 def read_oil_fill_level_entries(db: Session = Depends(get_db_oil)):
+    """
+    Retrieve a list of all oil fill level entries.
+
+    Returns all oil fill level entries, sorted by date in descending order.
+    """
     entries = oil.get_oil_fill_level_entries(db)
     response_entries = []
     for entry in entries:
@@ -126,6 +161,11 @@ def read_oil_fill_level_entries(db: Session = Depends(get_db_oil)):
     "/fill-level-entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT
 )
 def delete_oil_fill_level_entry(entry_id: int, db: Session = Depends(get_db_oil)):
+    """
+    Delete an oil fill level entry by its ID.
+
+    Raises a 404 error if the entry is not found.
+    """
     if not oil.delete_oil_fill_level_entry(db, entry_id):
         raise HTTPException(status_code=404, detail="Oil entry not found")
     return {"ok": True}
