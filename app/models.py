@@ -1,5 +1,4 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer
 from datetime import date as date_
 
 
@@ -16,7 +15,7 @@ class BaseWater(DeclarativeBase):
 
 
 class BaseModelMixin:
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
 
 class ElectricityDB(BaseElectricity, BaseModelMixin):
