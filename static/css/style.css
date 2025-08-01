@@ -94,6 +94,9 @@ body {
     color: var(--text-color);
     line-height: 1.7;
     transition: background-color 0.3s ease, color 0.3s ease;
+    -webkit-text-size-adjust: 100%; /* Prevent font scaling on iOS */
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 .container {
@@ -104,6 +107,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
 }
 
 header {
@@ -228,6 +232,7 @@ h1 {
     font-weight: bold;
     color: var(--label-color);
     font-size: 0.95em;
+    cursor: pointer; /* Better UX for mobile */
 }
 
 .form-group input[type="text"],
@@ -235,15 +240,27 @@ h1 {
 .form-group input[type="date"],
 .form-group textarea,
 .form-group select {
-    width: calc(100% - 24px);
+    width: 100%;
     padding: 12px;
     border: 1px solid var(--input-border);
     border-radius: 6px;
-    font-size: 16px;
+    font-size: 16px; /* Prevent zoom on iOS */
     box-sizing: border-box;
     background-color: var(--input-bg);
     color: var(--text-color);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    -webkit-appearance: none; /* Remove default styling on iOS */
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Custom styling for select dropdowns */
+.form-group select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
 }
 
 .form-group input[type="text"]:focus,
@@ -272,6 +289,8 @@ h1 {
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
     margin-right: 15px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+    touch-action: manipulation; /* Optimize for touch */
 }
 
 .btn-primary {
@@ -300,12 +319,16 @@ h1 {
     background-color: var(--btn-delete-bg);
     color: white;
     border: none;
-    padding: 9px 15px;
-    border-radius: 5px;
+    padding: 8px 12px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 15px;
-    margin-left: 8px;
+    font-size: 13px;
+    margin-left: 6px;
     transition: background-color 0.3s ease, transform 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 32px; /* Slightly bigger touch target */
+    min-width: 32px;
 }
 
 .btn-delete:hover {
@@ -317,11 +340,15 @@ h1 {
     background-color: var(--btn-edit-bg);
     color: white;
     border: none;
-    padding: 9px 15px;
-    border-radius: 5px;
+    padding: 8px 12px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 13px;
     transition: background-color 0.3s ease, transform 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 32px; /* Slightly bigger touch target */
+    min-width: 32px;
 }
 
 .btn-edit:hover {
@@ -363,6 +390,22 @@ h1 {
 /* Tables */
 .table-responsive {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 3px;
 }
 
 table {
@@ -372,6 +415,7 @@ table {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     border-radius: 8px;
     overflow: hidden; /* Ensures rounded corners apply to table */
+    min-width: 600px; /* Ensure minimum width for readability */
 }
 
 table th, table td {
@@ -551,29 +595,48 @@ table tr:hover {
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .container {
-        margin: 15px;
-        padding: 20px;
+        margin: 10px;
+        padding: 15px;
+        border-radius: 8px;
     }
 
     header {
-        margin: -20px -20px 25px -20px;
-        padding: 15px 20px;
+        margin: -15px -15px 20px -15px;
+        padding: 12px 15px;
+        border-radius: 8px 8px 0 0;
     }
 
     h1 {
-        font-size: 2em;
+        font-size: 1.8em;
+        margin-bottom: 10px;
+    }
+
+    .theme-switch-wrapper {
+        justify-content: center;
+        margin-bottom: 15px;
+        padding-right: 0;
     }
 
     .tab-navigation {
-        flex-wrap: wrap;
-        padding: 5px;
+        flex-direction: column;
+        padding: 8px;
+        gap: 8px;
     }
 
     .tab-button {
-        padding: 10px 15px;
-        font-size: 15px;
-        margin: 5px;
-        flex-basis: 45%; /* Two buttons per row */
+        padding: 15px 20px;
+        font-size: 16px;
+        margin: 0;
+        flex-basis: auto;
+        min-height: 50px; /* Better touch target */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .form-section, .stats-section, .chart-section, .table-section {
+        padding: 20px;
+        margin-bottom: 20px;
     }
 
     .form-grid, .stats-grid {
@@ -585,15 +648,70 @@ table tr:hover {
         grid-template-columns: 1fr;
     }
 
-    table th, table td {
-        font-size: 13px;
-        padding: 10px;
+    .form-group {
+        margin-bottom: 15px;
     }
 
-    .btn-primary, .btn-secondary, .btn-edit, .btn-delete {
-        width: calc(100% - 10px); /* Adjust width for smaller screens */
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group input[type="date"],
+    .form-group textarea,
+    .form-group select {
+        padding: 15px;
+        font-size: 16px; /* Prevent zoom on iOS */
+        min-height: 44px; /* Better touch target */
+    }
+
+    .btn-primary, .btn-secondary {
+        width: 100%;
         margin-right: 0;
         margin-bottom: 10px;
+        padding: 15px 20px;
+        font-size: 16px;
+        min-height: 44px; /* Better touch target */
+    }
+
+    .btn-edit, .btn-delete {
+        width: auto;
+        margin-right: 5px;
+        margin-bottom: 0;
+        padding: 6px 10px;
+        font-size: 12px;
+        min-height: 28px;
+        min-width: 28px;
+    }
+
+    .stats-grid {
+        gap: 15px;
+    }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+    .stat-card h3 {
+        font-size: 1em;
+        margin-bottom: 8px;
+    }
+
+    .stat-card p {
+        font-size: 24px;
+    }
+
+    .table-responsive {
+        margin: 0 -15px;
+        padding: 0 15px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    table th, table td {
+        font-size: 13px;
+        padding: 12px 8px;
+        word-wrap: break-word;
+        max-width: 120px;
     }
 
     .confirm-modal-buttons {
@@ -603,77 +721,246 @@ table tr:hover {
 
     .modal-content {
         padding: 20px;
+        width: 95%;
+        margin: 10px auto;
     }
 
     .modal-content .close {
         font-size: 28px;
         top: 10px;
         right: 15px;
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .confirm-modal-content {
-        padding: 30px;
+        padding: 30px 20px;
     }
 
     .confirm-modal-content p {
         font-size: 16px;
         margin-bottom: 25px;
+        line-height: 1.5;
+    }
+
+    .message {
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        transform: none;
+        width: auto;
+        max-width: none;
+    }
+
+    .chart-section canvas {
+        max-height: 300px;
+        margin: 0 -15px;
     }
 }
 
 @media (max-width: 480px) {
     .container {
-        margin: 10px;
-        padding: 15px;
+        margin: 5px;
+        padding: 10px;
     }
 
     header {
-        margin: -15px -15px 20px -15px;
-        padding: 12px 15px;
+        margin: -10px -10px 15px -10px;
+        padding: 10px;
     }
 
     h1 {
-        font-size: 1.8em;
+        font-size: 1.6em;
+        margin-bottom: 8px;
     }
 
     .tab-button {
-        font-size: 14px;
-        padding: 8px 10px;
-        margin: 3px;
+        font-size: 15px;
+        padding: 12px 15px;
+        min-height: 44px;
+    }
+
+    .form-section, .stats-section, .chart-section, .table-section {
+        padding: 15px;
+        margin-bottom: 15px;
     }
 
     .form-group input,
     .form-group textarea,
     .form-group select {
-        padding: 10px;
-        font-size: 14px;
+        padding: 12px;
+        font-size: 16px;
+        min-height: 44px;
     }
 
-    .btn-primary, .btn-secondary, .btn-edit, .btn-delete {
-        padding: 10px 15px;
-        font-size: 15px;
+    .btn-primary, .btn-secondary {
+        padding: 12px 15px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    .btn-edit, .btn-delete {
+        padding: 5px 8px;
+        font-size: 11px;
+        min-height: 24px;
+        min-width: 24px;
+    }
+
+    .stat-card {
+        padding: 12px;
     }
 
     .stat-card h3 {
-        font-size: 1em;
+        font-size: 0.9em;
     }
 
     .stat-card p {
-        font-size: 24px;
+        font-size: 20px;
     }
 
     table th, table td {
         font-size: 12px;
-        padding: 8px;
+        padding: 8px 6px;
+        max-width: 100px;
     }
 
     .modal-content {
         padding: 15px;
+        margin: 5px auto;
     }
 
     .modal-content h2 {
-        font-size: 1.5em;
+        font-size: 1.4em;
+        margin-bottom: 15px;
+    }
+
+    .confirm-modal-content {
+        padding: 20px 15px;
+    }
+
+    .confirm-modal-content p {
+        font-size: 15px;
         margin-bottom: 20px;
+    }
+
+    .chart-section canvas {
+        max-height: 250px;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+    .container {
+        margin: 2px;
+        padding: 8px;
+    }
+
+    header {
+        margin: -8px -8px 12px -8px;
+        padding: 8px;
+    }
+
+    h1 {
+        font-size: 1.4em;
+    }
+
+    .tab-button {
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+
+    .form-section, .stats-section, .chart-section, .table-section {
+        padding: 12px;
+    }
+
+    .stat-card {
+        padding: 10px;
+    }
+
+    .stat-card p {
+        font-size: 18px;
+    }
+
+    table th, table td {
+        font-size: 11px;
+        padding: 6px 4px;
+        max-width: 80px;
+    }
+
+    .modal-content {
+        padding: 12px;
+    }
+
+    .chart-section canvas {
+        max-height: 200px;
+    }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .container {
+        margin: 5px;
+        padding: 10px;
+    }
+
+    header {
+        margin: -10px -10px 15px -10px;
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.6em;
+        margin-bottom: 5px;
+    }
+
+    .tab-navigation {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .tab-button {
+        flex: 1;
+        min-width: 120px;
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    .form-section, .stats-section, .chart-section, .table-section {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+
+    .chart-section canvas {
+        max-height: 200px;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .btn-primary, .btn-secondary, .btn-edit, .btn-delete {
+        border-width: 0.5px;
+    }
+
+    table th, table td {
+        border-width: 0.5px;
+    }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
 
@@ -709,6 +996,23 @@ table tr:hover {
     overflow-y: auto;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* Consistent with other modals */
     transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Optimize fill level modal content layout */
+.fillLevelsModal-content > div {
+    margin-bottom: 20px;
+}
+
+.fillLevelsModal-content > div:last-child {
+    margin-bottom: 0;
+}
+
+/* Make charts in fill level modal responsive */
+.fillLevelsModal-content canvas {
+    max-height: 300px;
+    width: 100% !important;
+    height: auto !important;
 }
 
 .fillLevelsModal h3 {
@@ -741,12 +1045,43 @@ table tr:hover {
         width: 95%;
         margin: 10% auto;
         padding: 20px;
+        max-height: 85vh;
     }
 
     .fillLevelsModal-content .close {
         font-size: 28px;
         top: 10px;
         right: 15px;
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Optimize fill level modal tables for mobile */
+    .fillLevelsModal-content .table-responsive {
+        margin: 0 -20px;
+        padding: 0 20px;
+    }
+
+    .fillLevelsModal-content table {
+        min-width: 400px; /* Reduced minimum width */
+        font-size: 13px;
+    }
+
+    .fillLevelsModal-content table th,
+    .fillLevelsModal-content table td {
+        font-size: 12px;
+        padding: 8px 6px;
+        max-width: 80px;
+        word-wrap: break-word;
+    }
+
+    /* Make the modal content scrollable */
+    .fillLevelsModal-content {
+        overflow-y: auto;
+        max-height: 85vh;
     }
 }
 
@@ -754,6 +1089,44 @@ table tr:hover {
     .fillLevelsModal-content {
         margin: 5% auto;
         padding: 15px;
+        max-height: 90vh;
+    }
+
+    .fillLevelsModal-content .table-responsive {
+        margin: 0 -15px;
+        padding: 0 15px;
+    }
+
+    .fillLevelsModal-content table {
+        min-width: 350px; /* Even smaller for very small screens */
+        font-size: 12px;
+    }
+
+    .fillLevelsModal-content table th,
+    .fillLevelsModal-content table td {
+        font-size: 11px;
+        padding: 6px 4px;
+        max-width: 70px;
+    }
+}
+
+@media (max-width: 360px) {
+    .fillLevelsModal-content {
+        margin: 2% auto;
+        padding: 12px;
+        max-height: 95vh;
+    }
+
+    .fillLevelsModal-content table {
+        min-width: 300px; /* Smallest width for very small screens */
+        font-size: 11px;
+    }
+
+    .fillLevelsModal-content table th,
+    .fillLevelsModal-content table td {
+        font-size: 10px;
+        padding: 5px 3px;
+        max-width: 60px;
     }
 }
 
