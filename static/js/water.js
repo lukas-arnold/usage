@@ -80,6 +80,7 @@ async function loadWaterEntries() {
                 <td>${entry.price_wastewater}</td>
                 <td>${entry.price_rainwater}</td>
                 <td>${entry.fixed_price}</td>
+                <td>${entry.costs}</td>
                 <td>${entry.payments}</td>
                 <td>${entry.monthly_payment}</td>
                 <td>${entry.difference}</td>
@@ -250,17 +251,45 @@ async function loadWaterYearlySummaryChart() {
 }
 
 /**
- * Loads water price trend data and renders the chart.
+ * Loads water price trend data and renders the chart dynamically.
  */
 async function loadWaterPriceTrend() {
     try {
         const trendData = await WaterApi.getPriceTrend();
 
-        const labels = trendData.map(d => d.year);
-        const pricesWater = trendData.map(d => d.price_water);
-        const pricesWastewater = trendData.map(d => d.price_wastewater);
-        const pricesRainwater = trendData.map(d => d.price_rainwater);
-        const pricesFixed = trendData.map(d => d.fixed_price);
+        if (trendData.length === 0) {
+            console.warn("No trend data received from the API.");
+            showMessage('Keine Daten für den Wasser-Preisverlauf verfügbar.', 'info');
+            return;
+        }
+
+        // 1. Dynamically determine the start and end years from the data
+        const years = trendData.map(d => d.year);
+        const minYear = Math.min(...years);
+        const maxYear = Math.max(...years);
+
+        // 2. Create a complete list of all years for the x-axis labels
+        const allYears = [];
+        for (let year = minYear; year <= maxYear; year++) {
+            allYears.push(year);
+        }
+
+        // 3. Create a map for efficient data lookup
+        const dataMap = new Map(trendData.map(d => [d.year, d]));
+
+        // 4. Prepare datasets, handling missing and zero values for gaps
+        const pricesWater = allYears.map(year => dataMap.get(year)?.price_water ?? null);
+        const pricesWastewater = allYears.map(year => dataMap.get(year)?.price_wastewater ?? null);
+        
+        // Handle rainwater price: `null` is returned from backend for missing data
+        const pricesRainwater = allYears.map(year => dataMap.get(year)?.price_rainwater ?? null);
+        
+        // Handle fixed price: a `0` value from the backend means no price, so convert to `null`
+        const pricesFixed = allYears.map(year => {
+            const price = dataMap.get(year)?.price_fixed;
+            // The price is considered "not available" if it's null or 0
+            return (price === null || price === 0) ? null : price;
+        });
 
         const ctx = document.getElementById('waterPriceChart');
         if (!ctx) return;
@@ -270,7 +299,7 @@ async function loadWaterPriceTrend() {
         const newChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels,
+                labels: allYears, // Use the dynamically generated complete list of years
                 datasets: [
                     {
                         label: 'Wasser (€/m³)',
@@ -337,6 +366,9 @@ async function loadWaterPriceTrend() {
                         callbacks: {
                             label: function(context) {
                                 let label = context.dataset.label || '';
+                                if (context.parsed.y === null) {
+                                    return label + ': Daten nicht verfügbar';
+                                }
                                 if (label) {
                                     label += ': ';
                                 }

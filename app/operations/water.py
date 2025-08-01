@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, case
 from typing import List, Dict
 
 from app.operations.operations import (
@@ -37,7 +37,12 @@ def delete_water_entry(db: Session, entry_id: int):
 
 
 def calculate_water_derived_fields(entry: WaterDB) -> Dict[str, float]:
-    costs = entry.costs_water + entry.costs_wastewater + entry.costs_rainwater
+    costs = (
+        entry.costs_water
+        + entry.costs_wastewater
+        + entry.costs_rainwater
+        + entry.fixed_price
+    )
 
     price_water = calculate_price(entry.costs_water, entry.volume_water)
     price_wastewater = calculate_price(entry.costs_wastewater, entry.volume_wastewater)
@@ -52,7 +57,7 @@ def calculate_water_derived_fields(entry: WaterDB) -> Dict[str, float]:
         "price_wastewater": round(price_wastewater, 3),
         "price_rainwater": round(price_rainwater, 3),
         "monthly_payment": round(monthly_payment, 2),
-        "difference": difference,
+        "difference": -difference,
     }
 
 
@@ -88,16 +93,23 @@ def get_water_price_trend(db: Session) -> List[WaterPriceTrend]:
             func.avg(WaterDB.costs_wastewater / WaterDB.volume_wastewater).label(
                 "price_wastewater"
             ),
-            func.avg(WaterDB.costs_rainwater / WaterDB.volume_rainwater).label(
-                "price_rainwater"
-            ),
+            # Use a CASE statement to handle division by zero
+            # If volume_rainwater is 0 or less, the result is null. Otherwise, perform the division.
+            func.avg(
+                case(
+                    (
+                        WaterDB.volume_rainwater > 0,
+                        WaterDB.costs_rainwater / WaterDB.volume_rainwater,
+                    )
+                )
+            ).label("price_rainwater"),
             func.avg(WaterDB.fixed_price).label("price_fixed"),
         )
         .filter(
+            # Only filter out years where the primary data is missing.
             and_(
                 WaterDB.volume_water > 0,
                 WaterDB.volume_wastewater > 0,
-                WaterDB.volume_rainwater > 0,
             )
         )
         .group_by(WaterDB.year)
@@ -111,7 +123,12 @@ def get_water_price_trend(db: Session) -> List[WaterPriceTrend]:
                 year=int(r.year),
                 price_water=round(r.price_water, 3),
                 price_wastewater=round(r.price_wastewater, 3),
-                price_rainwater=round(r.price_rainwater, 3),
+                # The rainwater price will be None if the volume was 0
+                price_rainwater=(
+                    round(r.price_rainwater, 3)
+                    if r.price_rainwater is not None
+                    else None
+                ),
                 price_fixed=r.price_fixed,
             )
         )
