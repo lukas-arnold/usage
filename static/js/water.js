@@ -139,32 +139,32 @@ async function loadWaterYearlySummaryChart() {
                     {
                         label: 'Volumen Wasser (m³)',
                         data: totalVolumeWater,
-                        backgroundColor: 'rgba(255, 206, 86, 0.7)',
-                        borderColor: 'rgba(255, 206, 86, 1)',
+                        backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                        borderColor: 'rgba(0, 123, 255, 1)',
                         borderWidth: 2,
                         yAxisID: 'y-volume'
                     },
                     {
                         label: 'Kosten Wasser (€)',
                         data: totalCostsWater,
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(0, 150, 136, 0.7)',
+                        borderColor: 'rgba(0, 150, 136, 1)',
                         borderWidth: 2,
                         yAxisID: 'y-costs'
                     },
                     {
                         label: 'Volumen Schmutzwasser (m³)',
                         data: totalVolumeWastewater,
-                        backgroundColor: 'rgba(153, 102, 255, 0.7)',
-                        borderColor: 'rgba(153, 102, 255, 1)',
+                        backgroundColor: 'rgba(76, 175, 80, 0.7)',
+                        borderColor: 'rgba(76, 175, 80, 1)',
                         borderWidth: 2,
                         yAxisID: 'y-volume'
                     },
                     {
                         label: 'Kosten Schmutzwasser (€)',
                         data: totalCostsWastewater,
-                        borderColor: 'rgba(55, 43, 223, 1)',
-                        backgroundColor: 'rgba(94, 118, 255, 1)',
+                        borderColor: 'rgba(33, 150, 243, 1)',
+                        backgroundColor: 'rgba(33, 150, 243, 0.7)',
                         borderWidth: 2,
                         yAxisID: 'y-costs'
                     }
@@ -275,32 +275,32 @@ async function loadWaterPriceTrend() {
                     {
                         label: 'Wasser (€/m³)',
                         data: pricesWater,
-                        borderColor: 'rgb(60, 179, 113)',
-                        backgroundColor: 'rgba(60, 179, 113, 0.2)',
+                        borderColor: 'rgb(0, 123, 255)',
+                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
                         tension: 0.2,
                         fill: false
                     },
                     {
                         label: 'Schmutzwasser (€/m³)',
                         data: pricesWastewater,
-                        borderColor: 'rgb(128, 128, 128)',
-                        backgroundColor: 'rgba(128, 128, 128, 0.2)',
+                        borderColor: 'rgb(76, 175, 80)',
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
                         tension: 0.2,
                         fill: false
                     },
                     {
                         label: 'Niederschlagswasser (€/m³)',
                         data: pricesRainwater,
-                        borderColor: 'rgb(70, 130, 180)',
-                        backgroundColor: 'rgba(70, 130, 180, 0.2)',
+                        borderColor: 'rgb(33, 150, 243)',
+                        backgroundColor: 'rgba(33, 150, 243, 0.2)',
                         tension: 0.2,
                         fill: false
                     },
                     {
                         label: 'Festpreis (€)',
                         data: pricesFixed,
-                        borderColor: 'rgb(148, 0, 211)',
-                        backgroundColor: 'rgba(148, 0, 211, 0.2)',
+                        borderColor: 'rgb(0, 150, 136)',
+                        backgroundColor: 'rgba(0, 150, 136, 0.2)',
                         tension: 0.2,
                         fill: false
                     }

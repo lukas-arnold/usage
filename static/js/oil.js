@@ -129,15 +129,15 @@ async function loadOilYearlySummary() {
                     {
                         label: 'Heizölvolumen (L)',
                         data: totalVolumes,
-                        backgroundColor: 'rgba(255, 206, 86, 0.7)',
-                        borderColor: 'rgba(255, 206, 86, 1)',
+                        backgroundColor: 'rgba(139, 69, 19, 0.7)',
+                        borderColor: 'rgba(139, 69, 19, 1)',
                         borderWidth: 2,
                     },
                     {
                         label: 'Heizölkosten (€)',
                         data: totalCosts,
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        borderColor: 'rgba(0, 0, 0, 1)',
                         borderWidth: 2
                     }
                 ]
@@ -243,12 +243,12 @@ async function loadOilPriceTrend() {
                 datasets: [{
                     label: 'Heizölpreis (€/L)',
                     data: prices,
-                    borderColor: 'rgba(16, 185, 129, 1)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderColor: 'rgba(160, 82, 45, 1)',
+                    backgroundColor: 'rgba(160, 82, 45, 0.1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                    pointBackgroundColor: 'rgba(160, 82, 45, 1)',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 5,
@@ -518,8 +518,8 @@ async function loadFillLevelTrend() {
                 datasets: [{
                     label: 'Füllstand (cm)',
                     data: levels,
-                    backgroundColor: 'rgba(255, 206, 86, 0.7)',
-                    borderColor: 'rgba(255, 206, 86, 1)',
+                    backgroundColor: 'rgba(139, 69, 19, 0.7)',
+                    borderColor: 'rgba(139, 69, 19, 1)',
                     borderWidth: 2,
                     tension: 0.3
                 }]

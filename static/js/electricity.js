@@ -129,15 +129,15 @@ async function loadElectricityYearlySummaryChart() {
                     {
                         label: 'Stromverbrauch (kWh)',
                         data: totalUsages,
-                        backgroundColor: 'rgba(255, 206, 86, 0.7)',
-                        borderColor: 'rgba(255, 206, 86, 1)',
+                        backgroundColor: 'rgba(255, 215, 0, 0.7)',
+                        borderColor: 'rgba(255, 215, 0, 1)',
                         borderWidth: 2,
                     },
                     {
                         label: 'Stromkosten (€)',
                         data: totalCosts,
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                        borderColor: 'rgba(0, 123, 255, 1)',
                         borderWidth: 2
                     }
                 ]
@@ -244,12 +244,12 @@ async function loadElectricityPriceTrend() {
                 datasets: [{
                     label: 'Strompreis (€/kWh)',
                     data: prices,
-                    borderColor: 'rgba(16, 185, 129, 1)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderColor: 'rgba(255, 69, 0, 1)',
+                    backgroundColor: 'rgba(255, 69, 0, 0.1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                    pointBackgroundColor: 'rgba(255, 69, 0, 1)',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 5,
