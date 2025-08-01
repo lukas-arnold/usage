@@ -11,6 +11,15 @@ export function initializeWaterSection() {
         form.addEventListener('submit', handleWaterFormSubmit);
     }
 
+    // Automatically set the same value for wastewater as for water
+    const volumeWaterInput = document.querySelector('input[name="volume_water"]');
+    const volumeWastewaterInput = document.querySelector('input[name="volume_wastewater"]');
+    if (volumeWaterInput && volumeWastewaterInput) {
+        volumeWaterInput.addEventListener('input', () => {
+            volumeWastewaterInput.value = volumeWaterInput.value;
+        });
+    }
+
     loadWaterOverallStats();
     loadWaterYearlySummaryChart();
     loadWaterPriceTrend();
