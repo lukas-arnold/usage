@@ -20,6 +20,10 @@ export function initializeWaterSection() {
         });
     }
 
+    // Set default year to last year for submit
+    const lastYear = new Date().getFullYear() - 1;
+    document.getElementById("year").value = lastYear;
+
     loadWaterOverallStats();
     loadWaterYearlySummaryChart();
     loadWaterPriceTrend();

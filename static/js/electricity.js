@@ -11,6 +11,13 @@ export function initializeElectricitySection() {
         form.addEventListener('submit', handleElectricityFormSubmit);
     }
 
+    // Set default time to complete last year for submit
+    const lastYear = new Date().getFullYear() - 1;
+    const defaultTimeFrom = `${lastYear}-01-01`;
+    const defaultTimeTo = `${lastYear}-12-31`;
+    document.getElementById("time_from").value = defaultTimeFrom;
+    document.getElementById("time_to").value = defaultTimeTo;
+
     loadElectricityOverallStats();
     loadElectricityYearlySummaryChart();
     loadElectricityPriceTrend();

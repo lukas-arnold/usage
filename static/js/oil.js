@@ -12,6 +12,9 @@ export function initializeOilSection() {
         form.addEventListener('submit', handleOilFormSubmit);
     }
 
+    // Set default date to today for submit
+    document.getElementById("date").value = getTodaysDate();
+
     loadOilEntries();
     loadOilOverallStats();
     loadOilPriceTrend();
