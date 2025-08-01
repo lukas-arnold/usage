@@ -1,17 +1,24 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer
 from datetime import date as date_
 
 
-class Base(DeclarativeBase):
+class BaseElectricity(DeclarativeBase):
+    pass
+
+
+class BaseOil(DeclarativeBase):
+    pass
+
+
+class BaseWater(DeclarativeBase):
     pass
 
 
 class BaseModelMixin:
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
 
-class ElectricityDB(Base, BaseModelMixin):
+class ElectricityDB(BaseElectricity, BaseModelMixin):
     __tablename__ = "electricity"
 
     time_from: Mapped[date_] = mapped_column(nullable=False)
@@ -23,7 +30,7 @@ class ElectricityDB(Base, BaseModelMixin):
     note: Mapped[str | None] = mapped_column(nullable=True)
 
 
-class OilDB(Base, BaseModelMixin):
+class OilDB(BaseOil, BaseModelMixin):
     __tablename__ = "oil"
 
     date: Mapped[date_] = mapped_column(nullable=False)
@@ -33,14 +40,14 @@ class OilDB(Base, BaseModelMixin):
     note: Mapped[str | None] = mapped_column(nullable=True)
 
 
-class OilFillLevelDB(Base, BaseModelMixin):
+class OilFillLevelDB(BaseOil, BaseModelMixin):
     __tablename__ = "oil_fill_level"
 
     date: Mapped[date_] = mapped_column(nullable=False)
     level: Mapped[float] = mapped_column(nullable=False)
 
 
-class WaterDB(Base, BaseModelMixin):
+class WaterDB(BaseWater, BaseModelMixin):
     __tablename__ = "water"
 
     year: Mapped[int] = mapped_column(nullable=False)

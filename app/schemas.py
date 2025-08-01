@@ -1,149 +1,350 @@
-from pydantic import BaseModel
-from datetime import date
+from pydantic import BaseModel, Field
+from datetime import date as date_
 from typing import Optional
 
-
-class Electricity(BaseModel):
-    time_from: date
-    time_to: date
-    usage: int
-    costs: float
-    retailer: str
-    payments: float
-    note: Optional[str] = None
+# --- Electricity Schemas ---
+# This section defines the data models for electricity consumption and billing.
 
 
-class ElectricityCreate(Electricity):
+class ElectricityBase(BaseModel):
+    """
+    Base schema for an electricity bill or reading.
+    This class defines the core attributes common to all electricity records.
+    """
+
+    time_from: date_ = Field(..., description="Start date of the billing period.")
+    time_to: date_ = Field(..., description="End date of the billing period.")
+    usage: int = Field(
+        ..., description="Total electricity usage in kWh for the period."
+    )
+    costs: float = Field(
+        ...,
+        description="Total costs of electricity for the period, excluding payments made.",
+    )
+    retailer: str = Field(..., description="Name of the electricity retailer.")
+    payments: float = Field(
+        ..., description="Total amount paid to the retailer during the period."
+    )
+    note: Optional[str] = Field(
+        None, description="Optional notes about the electricity record."
+    )
+
+
+class ElectricityCreate(ElectricityBase):
+    """
+    Schema for creating a new electricity record.
+    It inherits all fields from `ElectricityBase`.
+    """
+
     pass
 
 
-class ElectricityResponse(Electricity):
-    id: int
-    price: float
-    monthly_payment: float
-    difference: float
+class ElectricityResponse(ElectricityBase):
+    """
+    Schema for an electricity record retrieved from the database.
+    It extends `ElectricityBase` with additional calculated or database-specific fields.
+    """
+
+    id: int = Field(..., description="Unique identifier for the electricity record.")
+    price: float = Field(..., description="Calculated price per kWh for the period.")
+    monthly_payment: float = Field(
+        ...,
+        description="Calculated average monthly payment based on the billing period.",
+    )
+    difference: float = Field(
+        ...,
+        description="Difference between total costs and total payments for the period.",
+    )
 
     class Config:
+        """
+        Pydantic configuration class.
+        `from_attributes = True` allows the model to be created from ORM objects.
+        """
+
         from_attributes = True
 
 
 class ElectricityOverallStats(BaseModel):
-    total_usage: float
-    total_costs: float
-    number_of_years: float
-    average_usage: float
+    """
+    Schema for overall electricity consumption statistics.
+    """
+
+    total_usage: float = Field(
+        ..., description="Total electricity usage across all records in kWh."
+    )
+    total_costs: float = Field(
+        ..., description="Total electricity costs across all records."
+    )
+    number_of_years: float = Field(
+        ..., description="Total number of years covered by the data."
+    )
+    average_usage: float = Field(
+        ..., description="Average annual electricity usage in kWh."
+    )
 
 
 class ElectricityPriceTrend(BaseModel):
-    year: int
-    average_price: float
+    """
+    Schema for representing the electricity price trend on a yearly basis.
+    """
+
+    year: int = Field(..., description="Year of the data point.")
+    average_price: float = Field(
+        ..., description="Average price per kWh for the given year."
+    )
 
 
 class ElectricityYearlySummary(BaseModel):
-    year: int
-    total_usage: float
-    total_costs: float
+    """
+    Schema for a summary of electricity data for a single year.
+    """
+
+    year: int = Field(..., description="Year of the summary.")
+    total_usage: float = Field(
+        ..., description="Total electricity usage for the year in kWh."
+    )
+    total_costs: float = Field(..., description="Total electricity costs for the year.")
 
 
-class Oil(BaseModel):
-    date: date
-    volume: int
-    costs: float
-    retailer: str
-    note: Optional[str] = None
+# --- Oil Schemas ---
+# This section defines the data models for oil consumption and fill levels.
 
 
-class OilCreate(Oil):
+class OilBase(BaseModel):
+    """
+    Base schema for an oil delivery record.
+    """
+
+    date: date_ = Field(..., description="Date of the oil delivery.")
+    volume: int = Field(..., description="Volume of the oil delivery in liters.")
+    costs: float = Field(..., description="Total costs of the oil delivery.")
+    retailer: str = Field(..., description="Name of the oil retailer.")
+    note: Optional[str] = Field(
+        None, description="Optional notes about the oil delivery."
+    )
+
+
+class OilCreate(OilBase):
+    """
+    Schema for creating a new oil delivery record.
+    """
+
     pass
 
 
-class OilResponse(Oil):
-    id: int
-    price: float
-    year_usage: float
+class OilResponse(OilBase):
+    """
+    Schema for an oil delivery record retrieved from the database.
+    """
+
+    id: int = Field(..., description="Unique identifier for the oil record.")
+    price: float = Field(..., description="Calculated price per liter of oil.")
+    year_usage: float = Field(
+        ..., description="Calculated oil usage for the year of the delivery."
+    )
 
     class Config:
+        """
+        Pydantic configuration class.
+        `from_attributes = True` allows the model to be created from ORM objects.
+        """
+
         from_attributes = True
 
 
 class OilOverallStats(BaseModel):
-    total_volume: float
-    total_costs: float
-    number_of_years: int
-    average_volume: float
+    """
+    Schema for overall oil consumption statistics.
+    """
+
+    total_volume: float = Field(
+        ..., description="Total volume of oil delivered across all records in liters."
+    )
+    total_costs: float = Field(..., description="Total costs of all oil deliveries.")
+    number_of_years: int = Field(
+        ..., description="Total number of years covered by the oil data."
+    )
+    average_volume: float = Field(
+        ..., description="Average annual oil volume usage in liters."
+    )
 
 
 class OilPriceTrend(BaseModel):
-    year: int
-    average_price: float
+    """
+    Schema for representing the oil price trend on a yearly basis.
+    """
+
+    year: int = Field(..., description="Year of the data point.")
+    average_price: float = Field(
+        ..., description="Average price per liter of oil for the given year."
+    )
 
 
 class OilYearlySummary(BaseModel):
-    year: int
-    total_volume: float
-    total_costs: float
+    """
+    Schema for a summary of oil data for a single year.
+    """
+
+    year: int = Field(..., description="Year of the summary.")
+    total_volume: float = Field(
+        ..., description="Total volume of oil delivered in the year in liters."
+    )
+    total_costs: float = Field(..., description="Total costs of oil for the year.")
 
 
-class OilFillLevels(BaseModel):
-    date: date
-    level: float
+class OilFillLevelsBase(BaseModel):
+    """
+    Base schema for an oil tank fill level measurement.
+    """
+
+    date: date_ = Field(..., description="Date of the fill level measurement.")
+    level: float = Field(
+        ..., description="Oil tank fill level in percentage (0.0 to 100.0)."
+    )
 
 
-class OilFillLevelsCreate(OilFillLevels):
+class OilFillLevelsCreate(OilFillLevelsBase):
+    """
+    Schema for creating a new oil fill level record.
+    """
+
     pass
 
 
-class OilFillLevelsResponse(OilFillLevels):
-    id: int
+class OilFillLevelsResponse(OilFillLevelsBase):
+    """
+    Schema for an oil fill level record retrieved from the database.
+    """
 
-
-class Water(BaseModel):
-    year: int
-    volume_water: int
-    volume_wastewater: int
-    volume_rainwater: int
-    costs_water: float
-    costs_wastewater: float
-    costs_rainwater: float
-    payments: float
-    fixed_price: float
-    note: Optional[str] = None
-
-
-class WaterCreate(Water):
-    pass
-
-
-class WaterResponse(Water):
-    id: int
-    price_water: float
-    price_wastewater: float
-    price_rainwater: float
-    monthly_payment: float
-    difference: float
+    id: int = Field(..., description="Unique identifier for the fill level record.")
 
     class Config:
+        """
+        Pydantic configuration class.
+        `from_attributes = True` allows the model to be created from ORM objects.
+        """
+
+        from_attributes = True
+
+
+# --- Water Schemas ---
+# This section defines the data models for water consumption and billing.
+
+
+class WaterBase(BaseModel):
+    """
+    Base schema for a water bill record.
+    """
+
+    year: int = Field(..., description="Year of the water bill.")
+    volume_water: int = Field(
+        ..., description="Volume of tap water consumed in liters."
+    )
+    volume_wastewater: int = Field(..., description="Volume of wastewater in liters.")
+    volume_rainwater: int = Field(..., description="Volume of rainwater in liters.")
+    costs_water: float = Field(..., description="Total costs for tap water.")
+    costs_wastewater: float = Field(..., description="Total costs for wastewater.")
+    costs_rainwater: float = Field(..., description="Total costs for rainwater.")
+    payments: float = Field(..., description="Total payments made for the water bill.")
+    fixed_price: float = Field(
+        ..., description="Fixed price component of the water bill."
+    )
+    note: Optional[str] = Field(
+        None, description="Optional notes about the water bill."
+    )
+
+
+class WaterCreate(WaterBase):
+    """
+    Schema for creating a new water bill record.
+    """
+
+    pass
+
+
+class WaterResponse(WaterBase):
+    """
+    Schema for a water bill record retrieved from the database.
+    """
+
+    id: int = Field(..., description="Unique identifier for the water record.")
+    price_water: float = Field(
+        ..., description="Calculated price per liter of tap water."
+    )
+    price_wastewater: float = Field(
+        ..., description="Calculated price per liter of wastewater."
+    )
+    price_rainwater: float = Field(
+        ..., description="Calculated price per liter of rainwater."
+    )
+    monthly_payment: float = Field(
+        ..., description="Calculated average monthly payment for the year."
+    )
+    difference: float = Field(
+        ...,
+        description="Difference between total costs and total payments for the year.",
+    )
+
+    class Config:
+        """
+        Pydantic configuration class.
+        `from_attributes = True` allows the model to be created from ORM objects.
+        """
+
         from_attributes = True
 
 
 class WaterOverallStats(BaseModel):
-    total_volume: int
-    total_costs: float
-    number_of_years: int
-    average_volume: float
+    """
+    Schema for overall water consumption statistics.
+    """
+
+    total_volume: int = Field(
+        ..., description="Total volume of tap water consumed across all records."
+    )
+    total_costs: float = Field(..., description="Total costs for all water bills.")
+    number_of_years: int = Field(
+        ..., description="Total number of years covered by the water data."
+    )
+    average_volume: float = Field(
+        ..., description="Average annual tap water volume in liters."
+    )
 
 
 class WaterYearlySummary(BaseModel):
-    year: int
-    volume_water: int
-    volume_wastewater: int
-    costs_water: float
-    costs_wastewater: float
+    """
+    Schema for a summary of water data for a single year.
+    """
+
+    year: int = Field(..., description="Year of the summary.")
+    volume_water: int = Field(
+        ..., description="Total tap water volume for the year in liters."
+    )
+    volume_wastewater: int = Field(
+        ..., description="Total wastewater volume for the year in liters."
+    )
+    costs_water: float = Field(
+        ..., description="Total costs for tap water for the year."
+    )
+    costs_wastewater: float = Field(
+        ..., description="Total costs for wastewater for the year."
+    )
 
 
 class WaterPriceTrend(BaseModel):
-    year: int
-    price_water: float
-    price_wastewater: float
-    price_rainwater: float
-    price_fixed: float
+    """
+    Schema for representing the water price trend on a yearly basis.
+    """
+
+    year: int = Field(..., description="Year of the data point.")
+    price_water: float = Field(
+        ..., description="Average price per liter of tap water for the year."
+    )
+    price_wastewater: float = Field(
+        ..., description="Average price per liter of wastewater for the year."
+    )
+    price_rainwater: float = Field(
+        ..., description="Average price per liter of rainwater for the year."
+    )
+    price_fixed: float = Field(..., description="Fixed price component for the year.")
