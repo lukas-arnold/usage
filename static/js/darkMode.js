@@ -7,18 +7,30 @@ function applyTheme() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-mode');
-        if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>'; // Sun icon for dark mode
+        if (darkModeToggle) {
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            darkModeToggle.setAttribute('aria-label', 'Switch to light mode');
+        }
     } else if (savedTheme === 'light') {
         document.body.classList.remove('dark-mode');
-        if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>'; // Moon icon for light mode
+        if (darkModeToggle) {
+            darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            darkModeToggle.setAttribute('aria-label', 'Switch to dark mode');
+        }
     } else {
         // If no theme is saved, use system preference
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.body.classList.add('dark-mode');
-            if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            if (darkModeToggle) {
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                darkModeToggle.setAttribute('aria-label', 'Switch to light mode');
+            }
         } else {
             document.body.classList.remove('dark-mode');
-            if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            if (darkModeToggle) {
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                darkModeToggle.setAttribute('aria-label', 'Switch to dark mode');
+            }
         }
     }
 }
@@ -27,13 +39,24 @@ function applyTheme() {
  * Toggles dark mode and saves preference.
  */
 function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    if (document.body.classList.contains('dark-mode')) {
-        localStorage.setItem('theme', 'dark');
-        if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-    } else {
+    const isDark = document.body.classList.contains('dark-mode');
+    
+    if (isDark) {
+        // Switching to light mode
+        document.body.classList.remove('dark-mode');
         localStorage.setItem('theme', 'light');
-        if (darkModeToggle) darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        if (darkModeToggle) {
+            darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            darkModeToggle.setAttribute('aria-label', 'Switch to dark mode');
+        }
+    } else {
+        // Switching to dark mode
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+        if (darkModeToggle) {
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            darkModeToggle.setAttribute('aria-label', 'Switch to light mode');
+        }
     }
 }
 
