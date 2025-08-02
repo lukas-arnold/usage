@@ -52,12 +52,12 @@ def calculate_water_derived_fields(entry: WaterDB) -> Dict[str, float]:
     difference = calculate_difference(costs, entry.payments)
 
     return {
-        "costs": costs,
+        "costs": round(costs, 2),
         "price_water": round(price_water, 3),
         "price_wastewater": round(price_wastewater, 3),
         "price_rainwater": round(price_rainwater, 3),
         "monthly_payment": round(monthly_payment, 2),
-        "difference": -difference,
+        "difference": round(-difference, 2),
     }
 
 

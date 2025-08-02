@@ -1,5 +1,5 @@
 import { WaterApi } from './api.js';
-import { showMessage, showConfirm, destroyChart, storeChart } from './ui.js';
+import { showMessage, showConfirm, formatNumber, formatCurrency, destroyChart, storeChart } from './ui.js';
 
 /**
  * Initializes the Water section, attaches event listeners, and loads data.
@@ -83,20 +83,20 @@ async function loadWaterEntries() {
 
             row.innerHTML = `
                 <td>${entry.year}</td>
-                <td>${entry.volume_water}</td>
-                <td>${entry.volume_wastewater}</td>
-                <td>${entry.volume_rainwater}</td>
-                <td>${entry.costs_water}</td>
-                <td>${entry.costs_wastewater}</td>
-                <td>${entry.costs_rainwater}</td>
-                <td>${entry.price_water}</td>
-                <td>${entry.price_wastewater}</td>
-                <td>${entry.price_rainwater}</td>
-                <td>${entry.fixed_price}</td>
-                <td>${entry.costs}</td>
-                <td>${entry.payments}</td>
-                <td>${entry.monthly_payment}</td>
-                <td>${entry.difference}</td>
+                <td>${entry.volume_water} m³</td>
+                <td>${entry.volume_wastewater} m³</td>
+                <td>${entry.volume_rainwater} m³</td>
+                <td>${formatCurrency(entry.costs_water)}</td>
+                <td>${formatCurrency(entry.costs_wastewater)}</td>
+                <td>${formatCurrency(entry.costs_rainwater)}</td>
+                <td>${formatCurrency(entry.price_water, 3)}/m³</td>
+                <td>${formatCurrency(entry.price_wastewater, 3)}/m³</td>
+                <td>${formatCurrency(entry.price_rainwater, 3)}/m³</td>
+                <td>${formatCurrency(entry.fixed_price)}</td>
+                <td>${formatCurrency(entry.costs)}</td>
+                <td>${formatCurrency(entry.payments)}</td>
+                <td>${formatCurrency(entry.monthly_payment)}/Monat</td>
+                <td>${formatCurrency(entry.difference)}</td>
                 <td>${entry.note || ''}</td>
                 <td>
                     <button class="btn-delete" data-id="${entry.id}">Löschen</button>
@@ -118,9 +118,9 @@ async function loadWaterOverallStats() {
     try {
         const stats = await WaterApi.getOverallStats();
         document.getElementById("water_total_volume").textContent = stats.total_volume;
-        document.getElementById("water_total_costs").textContent = stats.total_costs;
+        document.getElementById("water_total_costs").textContent = formatNumber(stats.total_costs, 0);
         document.getElementById("water_number_of_years").textContent = stats.number_of_years;
-        document.getElementById("water_average_volume").textContent = stats.average_volume;
+        document.getElementById("water_average_volume").textContent = formatNumber(stats.average_volume, 0);
     } catch (error) {
         console.error('Error loading water overall stats:', error);
         showMessage(`Fehler beim Laden der Wasser-Statistiken: ${error.message}`, 'error');
@@ -151,7 +151,7 @@ async function loadWaterYearlySummaryChart() {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Volumen Wasser (m³)',
+                        label: 'Volumen Wasser',
                         data: totalVolumeWater,
                         backgroundColor: 'rgba(0, 123, 255, 0.7)',
                         borderColor: 'rgba(0, 123, 255, 1)',
@@ -159,7 +159,7 @@ async function loadWaterYearlySummaryChart() {
                         yAxisID: 'y-volume'
                     },
                     {
-                        label: 'Kosten Wasser (€)',
+                        label: 'Kosten Wasser',
                         data: totalCostsWater,
                         backgroundColor: 'rgba(0, 150, 136, 0.7)',
                         borderColor: 'rgba(0, 150, 136, 1)',
@@ -167,7 +167,7 @@ async function loadWaterYearlySummaryChart() {
                         yAxisID: 'y-costs'
                     },
                     {
-                        label: 'Volumen Schmutzwasser (m³)',
+                        label: 'Volumen Schmutzwasser',
                         data: totalVolumeWastewater,
                         backgroundColor: 'rgba(76, 175, 80, 0.7)',
                         borderColor: 'rgba(76, 175, 80, 1)',
@@ -175,7 +175,7 @@ async function loadWaterYearlySummaryChart() {
                         yAxisID: 'y-volume'
                     },
                     {
-                        label: 'Kosten Schmutzwasser (€)',
+                        label: 'Kosten Schmutzwasser',
                         data: totalCostsWastewater,
                         borderColor: 'rgba(33, 150, 243, 1)',
                         backgroundColor: 'rgba(33, 150, 243, 0.7)',
@@ -209,6 +209,11 @@ async function loadWaterYearlySummaryChart() {
                                 size: 14,
                                 weight: 'bold'
                             }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value) + ' m³';
+                            }
                         }
                     },
                     'y-costs': {
@@ -221,6 +226,11 @@ async function loadWaterYearlySummaryChart() {
                             font: {
                                 size: 14,
                                 weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value, 0) + " €";
                             }
                         },
                         grid: {
@@ -236,10 +246,12 @@ async function loadWaterYearlySummaryChart() {
                                 if (label) {
                                     label += ': ';
                                 }
-                                if (label.includes('Volumen')) {
-                                    label += context.parsed.y + ' m³';
-                                } else {
-                                    label += context.parsed.y + ' €';
+
+                                // Check on usage or costs
+                                if (context.dataset.yAxisID === 'y-volume') {
+                                    label += formatNumber(context.parsed.y, 2) + ' m³';
+                                } else if (context.dataset.yAxisID === 'y-costs') {
+                                    label += formatCurrency(context.parsed.y);
                                 }
                                 return label;
                             }
@@ -344,7 +356,8 @@ async function loadWaterPriceTrend() {
                         borderColor: 'rgb(0, 150, 136)',
                         backgroundColor: 'rgba(0, 150, 136, 0.2)',
                         tension: 0.2,
-                        fill: false
+                        fill: false,
+                        hidden: true
                     }
                 ]
             },
@@ -356,10 +369,15 @@ async function loadWaterPriceTrend() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Preis (€)',
+                            text: 'Preis',
                             font: {
                                 size: 14,
                                 weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
                             }
                         }
                     },

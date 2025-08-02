@@ -1,6 +1,6 @@
 // oil.js
 import { OilApi } from './api.js';
-import { showMessage, showConfirm, formatDate, getTodaysDate, destroyChart, storeChart } from './ui.js';
+import { showMessage, showConfirm, formatDate, formatNumber, formatCurrency, getTodaysDate, destroyChart, storeChart } from './ui.js';
 
 /**
  * Initializes the Oil section, attaches event listeners, and loads data.
@@ -71,9 +71,9 @@ async function loadOilEntries() {
 
             row.innerHTML = `
                 <td>${formatDate(entry.date)}</td>
-                <td>${(entry.volume)}</td>
-                <td>${(entry.costs)}</td>
-                <td>${(entry.price)}</td>
+                <td>${(entry.volume)} L</td>
+                <td>${formatCurrency(entry.costs)}</td>
+                <td>${formatCurrency(entry.price, 3)}/L</td>
                 <td>${entry.retailer}</td>
                 <td>${entry.note || ''}</td>
                 <td>
@@ -96,9 +96,9 @@ async function loadOilOverallStats() {
     try {
         const stats = await OilApi.getOverallStats();
         document.getElementById('oil_total_volume').textContent = stats.total_volume;
-        document.getElementById('oil_total_costs').textContent = stats.total_costs;
+        document.getElementById('oil_total_costs').textContent = formatNumber(stats.total_costs, 0);
         document.getElementById('oil_number_of_years').textContent = stats.number_of_years;
-        document.getElementById('oil_average_volume').textContent = stats.average_volume;
+        document.getElementById('oil_average_volume').textContent = formatNumber(stats.average_volume, 0);
     } catch (error) {
         console.error('Error loading oil overall stats:', error);
         showMessage(`Fehler beim Laden der Heizöl-Statistiken: ${error.message}`, 'error');
@@ -130,18 +130,20 @@ async function loadOilYearlySummary() {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Heizölvolumen (L)',
+                        label: 'Heizölvolumen',
                         data: totalVolumes,
                         backgroundColor: 'rgba(139, 69, 19, 0.7)',
                         borderColor: 'rgba(139, 69, 19, 1)',
                         borderWidth: 2,
+                        yAxisID: "y-volume"
                     },
                     {
-                        label: 'Heizölkosten (€)',
+                        label: 'Heizölkosten',
                         data: totalCosts,
                         backgroundColor: 'rgba(0, 0, 0, 0.7)',
                         borderColor: 'rgba(0, 0, 0, 1)',
-                        borderWidth: 2
+                        borderWidth: 2,
+                        yAxisID: "y-costs"
                     }
                 ]
             },
@@ -165,10 +167,15 @@ async function loadOilYearlySummary() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Volumen (m³)',
+                            text: 'Volumen',
                             font: {
                                 size: 14,
                                 weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value) + " L";
                             }
                         }
                     },
@@ -178,14 +185,19 @@ async function loadOilYearlySummary() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Kosten (€)',
+                            text: 'Kosten',
                             font: {
                                 size: 14,
                                 weight: 'bold'
                             }
                         },
                         grid: {
-                            drawOnChartArea: false // Only draw grid lines for the left axis
+                            drawOnChartArea: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
                         }
                     }
                 },
@@ -197,10 +209,10 @@ async function loadOilYearlySummary() {
                                 if (label) {
                                     label += ': ';
                                 }
-                                if (context.dataset.label.includes('Volumen')) {
-                                    label += context.parsed.y + ' L';
-                                } else if (context.dataset.label.includes('Kosten')) {
-                                    label += context.parsed.y + ' €';
+                                if (context.dataset.yAxisID === 'y-volume') {
+                                    label += formatNumber(context.parsed.y, 2) + ' L';
+                                } else if (context.dataset.yAxisID === 'y-costs') {
+                                    label += formatCurrency(context.parsed.y);
                                 }
                                 return label;
                             }
@@ -244,7 +256,7 @@ async function loadOilPriceTrend() {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Heizölpreis (€/L)',
+                    label: 'Heizölpreis',
                     data: prices,
                     borderColor: 'rgba(160, 82, 45, 1)',
                     backgroundColor: 'rgba(160, 82, 45, 0.1)',
@@ -266,10 +278,15 @@ async function loadOilPriceTrend() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Preis (€/L)',
+                            text: 'Preis',
                             font: {
                                 size: 14,
                                 weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value) + "/L";
                             }
                         }
                     },
@@ -386,7 +403,7 @@ async function loadFillLevels() {
 
             row.innerHTML = `
                 <td>${formatDate(level.date)}</td>
-                <td>${(level.level)}</td>
+                <td>${(level.level)} cm</td>
                 <td>
                     <button class="btn-delete" data-id="${level.id}">Löschen</button>
                 </td>
@@ -519,7 +536,7 @@ async function loadFillLevelTrend() {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Füllstand (cm)',
+                    label: 'Füllstand',
                     data: levels,
                     backgroundColor: 'rgba(139, 69, 19, 0.7)',
                     borderColor: 'rgba(139, 69, 19, 1)',
