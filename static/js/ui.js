@@ -84,6 +84,36 @@ export function formatDate(dateString) {
 }
 
 /**
+ * Formats a number with a German locale, using a comma as a decimal separator
+ * and a period as a thousand separator.
+ * @param {number} number - The number to format.
+ * @param {number} [maximumFractionDigits=2] - The maximum number of decimal places to display. Defaults to 2.
+ * @returns {string} The formatted number string.
+ */
+export function formatNumber(number, maximumFractionDigits = 2) {
+    return new Intl.NumberFormat('de-DE', {
+        useGrouping: true,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: maximumFractionDigits
+    }).format(number);
+}
+
+/**
+ * Formats a number into a currency string using the German (de-DE) locale and EUR currency.
+ * @param {number} amount - The amount to format.
+ * @param {number} [decimalPlaces=2] - The number of decimal places to use. Defaults to 2.
+ * @returns {string} The formatted currency string.
+ */
+export function formatCurrency(amount, decimalPlaces = 2) {
+    return new Intl.NumberFormat('de-DE', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: decimalPlaces,
+        maximumFractionDigits: decimalPlaces,
+    }).format(amount);
+}
+
+/**
  * Returns the date of today.
  * @returns {string} Todays date.
  */

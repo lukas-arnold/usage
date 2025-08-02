@@ -9,7 +9,7 @@ from app.operations.operations import (
     get_entries,
     delete_entry,
     calculate_price,
-    calculate_monthly_payment,
+    calculate_monthly_payment_dynamic,
     calculate_difference,
 )
 from app.models import ElectricityDB
@@ -41,7 +41,8 @@ def calculate_electricity_derived_fields(
     entry: ElectricityDB,
 ) -> Dict[str, float]:
     price = calculate_price(entry.costs, entry.usage)
-    monthly_payment = calculate_monthly_payment(entry.payments)
+    duration_days = get_days_in_period(entry.time_from, entry.time_to)
+    monthly_payment = calculate_monthly_payment_dynamic(entry.payments, duration_days)
     difference = calculate_difference(entry.payments, entry.costs)
     return {
         "price": round(price, 3),
