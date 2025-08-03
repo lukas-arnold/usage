@@ -269,6 +269,9 @@ class WaterResponse(WaterBase):
     """
 
     id: int = Field(..., description="Unique identifier for the water record.")
+    costs: float = Field(
+        ..., description="Total costs for water, wastewater, rainwater and fixed price."
+    )
     price_water: float = Field(
         ..., description="Calculated price per liter of tap water."
     )
@@ -344,7 +347,7 @@ class WaterPriceTrend(BaseModel):
     price_wastewater: float = Field(
         ..., description="Average price per liter of wastewater for the year."
     )
-    price_rainwater: float = Field(
+    price_rainwater: Optional[float] = Field(
         ..., description="Average price per liter of rainwater for the year."
     )
     price_fixed: float = Field(..., description="Fixed price component for the year.")

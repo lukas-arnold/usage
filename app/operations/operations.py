@@ -50,5 +50,12 @@ def calculate_monthly_payment(payments: float) -> float:
     return payments / 12 if payments else 0.0
 
 
+def calculate_monthly_payment_dynamic(payments: float, days: int) -> float:
+    if days <= 0:
+        return 0.0
+    average_daily_payment = payments / days
+    return average_daily_payment * 30.44  # average month
+
+
 def calculate_difference(costs: float, payments: float) -> float:
     return costs - payments

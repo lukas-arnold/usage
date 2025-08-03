@@ -1,5 +1,5 @@
 import { ElectricityApi } from './api.js';
-import { showMessage, showConfirm, formatDate, destroyChart, storeChart } from './ui.js';
+import { showMessage, showConfirm, formatDate, formatNumber, formatCurrency, destroyChart, storeChart } from './ui.js';
 
 /**
  * Initializes the Electricity section, attaches event listeners, and loads data.
@@ -10,6 +10,13 @@ export function initializeElectricitySection() {
     if (form) {
         form.addEventListener('submit', handleElectricityFormSubmit);
     }
+
+    // Set default time to complete last year for submit
+    const lastYear = new Date().getFullYear() - 1;
+    const defaultTimeFrom = `${lastYear}-01-01`;
+    const defaultTimeTo = `${lastYear}-12-31`;
+    document.getElementById("time_from").value = defaultTimeFrom;
+    document.getElementById("time_to").value = defaultTimeTo;
 
     loadElectricityOverallStats();
     loadElectricityYearlySummaryChart();
@@ -68,13 +75,13 @@ async function loadElectricityEntries() {
             row.innerHTML = `
                 <td>${formatDate(entry.time_from)}</td>
                 <td>${formatDate(entry.time_to)}</td>
-                <td>${entry.usage}</td>
-                <td>${entry.costs}</td>
-                <td>${entry.price}</td>
+                <td>${entry.usage} kWh</td>
+                <td>${formatCurrency(entry.costs)}</td>
+                <td>${formatCurrency(entry.price, 3)}/kWh</td>
                 <td>${entry.retailer}</td>
-                <td>${entry.payments}</td>
-                <td>${entry.monthly_payment}</td>
-                <td>${entry.difference}</td>
+                <td>${formatCurrency(entry.payments)}</td>
+                <td>${formatCurrency(entry.monthly_payment)}/Monat</td>
+                <td>${formatCurrency(entry.difference)}</td>
                 <td>${entry.note || ''}</td>
                 <td>
                     <button class="btn-delete" data-id="${entry.id}">Löschen</button>
@@ -96,9 +103,9 @@ async function loadElectricityOverallStats() {
     try {
         const stats = await ElectricityApi.getOverallStats();
         document.getElementById('electricity_total_usage').textContent = stats.total_usage;
-        document.getElementById('electricity_total_costs').textContent = stats.total_costs;
-        document.getElementById('electricity_number_of_years').textContent = stats.number_of_years;
-        document.getElementById('electricity_average_usage').textContent = stats.average_usage;
+        document.getElementById('electricity_total_costs').textContent = formatNumber(stats.total_costs, 0);
+        document.getElementById('electricity_number_of_years').textContent = formatNumber(stats.number_of_years, 0);
+        document.getElementById('electricity_average_usage').textContent = formatNumber(stats.average_usage, 0);
     } catch (error) {
         console.error('Error loading electricity overall stats:', error);
         showMessage(`Fehler beim Laden der Strom-Statistiken: ${error.message}`, 'error');
@@ -127,18 +134,20 @@ async function loadElectricityYearlySummaryChart() {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Stromverbrauch (kWh)',
+                        label: 'Stromverbrauch',
                         data: totalUsages,
-                        backgroundColor: 'rgba(255, 206, 86, 0.7)',
-                        borderColor: 'rgba(255, 206, 86, 1)',
+                        backgroundColor: 'rgba(255, 215, 0, 0.7)',
+                        borderColor: 'rgba(255, 215, 0, 1)',
                         borderWidth: 2,
+                        yAxisID: "y-volume"
                     },
                     {
-                        label: 'Stromkosten (€)',
+                        label: 'Stromkosten',
                         data: totalCosts,
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 2
+                        backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                        borderColor: 'rgba(0, 123, 255, 1)',
+                        borderWidth: 2,
+                        yAxisID: "y-costs"
                     }
                 ]
             },
@@ -162,10 +171,15 @@ async function loadElectricityYearlySummaryChart() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Verbrauch (kWh)',
+                            text: 'Verbrauch',
                             font: {
                                 size: 14,
                                 weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value) + ' kWh';
                             }
                         }
                     },
@@ -175,14 +189,19 @@ async function loadElectricityYearlySummaryChart() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Kosten (€)',
+                            text: 'Kosten',
                             font: {
                                 size: 14,
                                 weight: 'bold'
                             }
                         },
                         grid: {
-                            drawOnChartArea: false // Only draw grid lines for the left axis
+                            drawOnChartArea: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
                         }
                     }
                 },
@@ -194,10 +213,12 @@ async function loadElectricityYearlySummaryChart() {
                                 if (label) {
                                     label += ': ';
                                 }
-                                if (context.dataset.label.includes('Verbrauch')) {
-                                    label += context.parsed.y + ' kWh';
-                                } else {
-                                    label += context.parsed.y + ' €';
+
+                                // Check on usage or costs
+                                if (context.dataset.yAxisID === 'y-volume') {
+                                    label += formatNumber(context.parsed.y, 2) + ' kWh';
+                                } else if (context.dataset.yAxisID === 'y-costs') {
+                                    label += formatCurrency(context.parsed.y);
                                 }
                                 return label;
                             }
@@ -221,7 +242,6 @@ async function loadElectricityYearlySummaryChart() {
     }
 }
 
-
 /**
  * Loads electricity price trend data and renders the chart.
  */
@@ -242,14 +262,14 @@ async function loadElectricityPriceTrend() {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Strompreis (€/kWh)',
+                    label: 'Strompreis',
                     data: prices,
-                    borderColor: 'rgba(16, 185, 129, 1)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderColor: 'rgba(255, 69, 0, 1)',
+                    backgroundColor: 'rgba(255, 69, 0, 0.1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                    pointBackgroundColor: 'rgba(255, 69, 0, 1)',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 5,
@@ -264,10 +284,15 @@ async function loadElectricityPriceTrend() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Preis (€/kWh)',
+                            text: 'Preis',
                             font: {
                                 size: 14,
                                 weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value) + "/kWh";
                             }
                         }
                     },
@@ -286,7 +311,7 @@ async function loadElectricityPriceTrend() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y + ' €/kWh';
+                                return context.dataset.label + ': ' + formatCurrency(context.parsed.y, 3) + ' €/kWh';
                             }
                         }
                     },
