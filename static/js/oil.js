@@ -451,7 +451,7 @@ async function loadFillLevelChart() {
             data: {
                 labels: ['Füllstand'],
                 datasets: [{
-                    label: 'Füllstand (%)',
+                    label: 'Füllstand',
                     data: fillLevelPercentage,
                     backgroundColor: backgroundColors,
                     borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
@@ -463,6 +463,13 @@ async function loadFillLevelChart() {
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.dataset.label + ': ' + tooltipItem.formattedValue + '%';
+                            }
+                        }
                     }
                 },
                 scales: {
