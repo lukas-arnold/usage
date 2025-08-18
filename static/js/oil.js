@@ -512,7 +512,13 @@ async function loadFillLevelChart() {
 
 async function loadFillLevelTrend() {
     try {
-        const fillLevels = await OilApi.getFillLevelEntries();
+        const fillLevels_unsorted = await OilApi.getFillLevelEntries();
+        const fillLevels = [...fillLevels_unsorted].sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateA - dateB;
+        });
+
         const ctx = document.getElementById('fillLevelTrend')?.getContext('2d');
 
         if (!ctx) {
