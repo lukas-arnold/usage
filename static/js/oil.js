@@ -533,7 +533,7 @@ async function loadFillLevelTrend() {
 
         fillLevels.forEach(d => {
             if (typeof d.level === 'number' && !isNaN(d.level)) {
-                const formattedDate = new Date(d.date).toLocaleDateString('de-DE');
+                const formattedDate = formatDate(new Date(d.date));
                 labels.push(formattedDate);
                 levels.push(d.level);
             }
